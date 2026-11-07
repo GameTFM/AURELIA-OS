@@ -204,18 +204,40 @@ def light_wallpaper() -> Image.Image:
 
 
 def logo_image(size: int = 1024) -> Image.Image:
+    """AURELIA's hexagonal network mark, drawn from primitives."""
     image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(image)
-    pad = int(size * 0.08)
-    ring = max(3, size // 150)
-    draw.ellipse((pad, pad, size - pad, size - pad), outline=GOLD + (220,), width=ring)
-    font = ImageFont.truetype(str(FONT), int(size * 0.50))
-    bbox = draw.textbbox((0, 0), "A", font=font)
-    tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
-    draw.text(((size - tw) / 2, (size - th) / 2 - bbox[1] - size * 0.03), "A",
-              font=font, fill=IVORY + (255,))
-    draw.line((size * 0.38, size * 0.61, size * 0.62, size * 0.61),
-              fill=GOLD + (255,), width=max(2, size // 220))
+    center = size / 2
+    outer_radius = size * 0.355
+    inner_radius = size * 0.205
+
+    def hexagon(radius: float) -> list[tuple[float, float]]:
+        points = []
+        for index in range(6):
+            angle = math.radians(-90 + index * 60)
+            points.append((center + radius * math.cos(angle),
+                           center + radius * math.sin(angle)))
+        return points
+
+    outer = hexagon(outer_radius)
+    inner = hexagon(inner_radius)
+    outer_width = max(5, size // 82)
+    inner_width = max(3, size // 145)
+    draw.line(outer + [outer[0]], fill=BLUE + (255,), width=outer_width,
+              joint="curve")
+    draw.line(inner + [inner[0]], fill=(117, 213, 242, 235), width=inner_width,
+              joint="curve")
+    for index in range(6):
+        draw.line((outer[index][0], outer[index][1], inner[index][0], inner[index][1]),
+                  fill=(61, 170, 216, 235), width=max(2, size // 190))
+        for point, radius in ((outer[index], size * 0.038), (inner[index], size * 0.021)):
+            x, y = point
+            draw.ellipse((x - radius, y - radius, x + radius, y + radius),
+                         fill=DEEP_BLUE + (255,), outline=(128, 225, 250, 255),
+                         width=max(2, size // 210))
+            draw.ellipse((x - radius * 0.42, y - radius * 0.42,
+                          x + radius * 0.42, y + radius * 0.42),
+                         fill=(196, 243, 255, 245))
     return image
 
 

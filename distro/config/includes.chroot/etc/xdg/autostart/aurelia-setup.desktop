@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=AURELIA Setup
+Comment=Set up your new AURELIA computer
+Exec=/usr/libexec/aurelia/aurelia-setup-first-run
+Icon=aurelia-logo
+Terminal=false
+NoDisplay=true
+OnlyShowIn=KDE;
+X-KDE-autostart-after=panel

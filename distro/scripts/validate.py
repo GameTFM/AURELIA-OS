@@ -107,6 +107,8 @@ def check_shell() -> None:
         INCLUDE / "usr/libexec/aurelia/aurelia-first-login",
         INCLUDE / "usr/libexec/aurelia/aurelia-installer",
         INCLUDE / "usr/bin/novair",
+        INCLUDE / "usr/bin/aurelia-setup",
+        INCLUDE / "usr/libexec/aurelia/aurelia-setup-first-run",
     ]
     for path in sorted(set(shell_paths)):
         if not path.exists():
@@ -243,7 +245,11 @@ def check_required_payload() -> None:
         "usr/share/applications/novair.desktop",
         "usr/share/novair/novair.py",
         "usr/bin/novair",
+        "usr/share/aurelia-setup/aurelia-setup.py",
+        "usr/bin/aurelia-setup",
+        "etc/xdg/autostart/aurelia-setup.desktop",
         "usr/share/icons/hicolor/512x512/apps/novair.png",
+        "usr/libexec/aurelia/aurelia-setup-first-run",
         "usr/libexec/aurelia/aurelia-first-login",
         "usr/libexec/aurelia/aurelia-installer",
         "etc/calamares/settings.conf",
@@ -425,6 +431,20 @@ def check_novair() -> None:
         passed("NOVAIR launcher target")
 
 
+def check_setup_app() -> None:
+    source = (INCLUDE / "usr/share/aurelia-setup/aurelia-setup.py").read_text(encoding="utf-8")
+    for token in ("SetupWindow", "STEPS", "plasma-apply-colorscheme", "hostnamectl", "aurelia-setup-complete"):
+        if token not in source:
+            fail(f"AURELIA setup source is missing {token}")
+        else:
+            passed(f"AURELIA setup token {token}")
+    autostart = (INCLUDE / "etc/xdg/autostart/aurelia-setup.desktop").read_text(encoding="utf-8")
+    if "aurelia-setup-first-run" not in autostart:
+        fail("setup autostart does not use the live-session guard")
+    else:
+        passed("setup autostart live-session guard")
+
+
 def main() -> int:
     print("AURELIA static validation")
     check_json()
@@ -437,6 +457,7 @@ def main() -> int:
     check_required_payload()
     check_branding_and_installer()
     check_novair()
+    check_setup_app()
     check_images()
     check_lean_policy()
     check_packages()

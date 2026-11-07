@@ -1,0 +1,16 @@
+#!/bin/sh
+# Show the first-login setup on installed systems only. On the live ISO the
+# installer is the setup path, and the Calamares session must not be covered by
+# another setup window.
+set -eu
+
+if [ -d /run/live ]; then
+    exit 0
+fi
+
+marker="${XDG_CONFIG_HOME:-$HOME/.config}/aurelia-setup-complete"
+if [ -f "$marker" ]; then
+    exit 0
+fi
+
+exec /usr/bin/aurelia-setup

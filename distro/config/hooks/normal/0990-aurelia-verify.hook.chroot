@@ -22,9 +22,12 @@ required="
 /usr/share/novair/novair.py
 /usr/bin/novair
 /usr/share/icons/hicolor/512x512/apps/novair.png
+/usr/share/aurelia-setup/aurelia-setup.py
+/usr/bin/aurelia-setup
+/usr/libexec/aurelia/aurelia-setup-first-run
 /usr/share/fonts/truetype/aurelia/PlayfairDisplay.ttf
 /usr/libexec/aurelia/aurelia-first-login
-"
+"/
 
 for path in $required; do
     if [ ! -f "$path" ]; then
@@ -44,10 +47,13 @@ done
 # NOVAIR is a real Qt WebEngine application. This checks the installed Python
 # binding and the launcher without opening a display or a browser window.
 python3 /usr/share/novair/novair.py --self-test
+python3 /usr/share/aurelia-setup/aurelia-setup.py --self-test
 
-if [ ! -x /usr/bin/novair ]; then
-    echo "AURELIA NOVAIR launcher is not executable" >&2
-    exit 1
-fi
+for launcher in /usr/bin/novair /usr/bin/aurelia-setup /usr/libexec/aurelia/aurelia-setup-first-run; do
+    if [ ! -x "$launcher" ]; then
+        echo "AURELIA launcher is not executable: $launcher" >&2
+        exit 1
+    fi
+done
 
 echo "AURELIA payload verification OK"
