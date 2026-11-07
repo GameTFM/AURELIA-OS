@@ -15,18 +15,21 @@
 | ISO size | 2,408,841,216 bytes (2.4 GB), latest verified artifact |
 | SHA-256 | `b76f0b2144d7b51d11372374ad1e3613f354342270819701c32081031ff0f04b` |
 | initramfs contents | **PASS** — 1,087 modules, overlayfs present, patched Casper call |
-| BIOS QEMU boot | **PASS** — GRUB, Casper, SDDM autologin and the Plasma live desktop |
+| BIOS QEMU boot | **PASS** — the `d1c9d47` ISO reaches the Plasma live desktop |
 | UEFI QEMU boot | **PASS to GRUB and the graphical boot splash**; pflash OVMF reaches the live entry |
-| UEFI desktop | **NOT YET CONFIRMED** — the first UEFI harness stopped at a black graphical screen |
+| UEFI desktop | **NOT YET CONFIRMED** — the UEFI harness stopped at a black graphical screen |
 | Calamares full install | **NOT RUN** |
 | Installed-system boot | **NOT RUN** |
 | Hardware / Secure Boot / USB hybrid | **NOT RUN** |
 
-The live desktop evidence is `build/ci/live-clean.png`: wallpaper, thin top
-bar, large centered `SATURDAY / 18:11 / 7 NOVEMBER 2026` clock, calendar,
-notes and media cards, weather configuration card, system monitor and the
-floating dock. `build/ci/live-4.png` shows the same session before the live
-setup and KDE Welcome windows were closed.
+The live desktop evidence is `build/ci/installer-1.png` from the final
+`d1c9d47` ISO: wallpaper, thin top bar, large centered
+`SATURDAY / 18:37 / 7 NOVEMBER 2026` clock, calendar, notes and media cards,
+weather configuration card, system monitor and the floating dock. The live
+AURELIA Setup window is correctly absent. KDE's Welcome window still appears
+on the live session despite the `Hidden=true` autostart override and was
+closed by hand; that override needs another pass. `build/ci/live-clean.png`
+is the equivalent desktop from the previous `ec75090` build.
 
 The Casper initrd needed a real fix: `/etc/casper.conf` sets
 `BUILD_SYSTEM="AURELIA"`, which leaves `MP_QUIET` empty and turns Casper's
