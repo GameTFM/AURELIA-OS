@@ -1,3 +1,4 @@
 #!/bin/sh
+# Invoked by lb build. Keep this hook side-effect free; build-iso.sh starts
+# the actual build with lb build directly.
 set -eu
-lb build

@@ -1,3 +1,4 @@
 #!/bin/sh
+# Invoked by lb clean. Keep this hook side-effect free; callers run lb clean
+# directly so cleaning cannot recurse.
 set -eu
-lb clean --purge

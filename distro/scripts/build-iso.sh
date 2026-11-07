@@ -48,7 +48,7 @@ echo "== AURELIA live-build configuration =="
 bash ./auto/config
 
 echo "== building ISO =="
-bash ./auto/build
+lb build
 
 ISO="$ROOT/live-image-amd64.hybrid.iso"
 if [ ! -f "$ISO" ] && [ -f "$ROOT/binary.hybrid.iso" ]; then
