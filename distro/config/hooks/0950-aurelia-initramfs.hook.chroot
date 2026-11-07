@@ -49,8 +49,8 @@ done
 # and, with MODULES=dep, leaves every kernel module out. Keep a copy of this
 # verified initramfs so the ISO builder can put it at /casper/initrd.img.
 mkdir -p /var/tmp
-cp -f "$initrd" /var/tmp/aurelia-initrd.img
-echo "AURELIA: stashed live initramfs at /var/tmp/aurelia-initrd.img"
+cp -f "$initrd" /etc/aurelia-live-initrd.img
+echo "AURELIA: stashed live initramfs at /etc/aurelia-live-initrd.img"
 
 grep -q 'modprobe ${MP_QUIET} -b overlay' /usr/share/initramfs-tools/scripts/casper || {
     echo "AURELIA: casper modprobe quoting was not patched" >&2

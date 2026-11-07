@@ -46,27 +46,28 @@ echo "== building ISO =="
 lb build noauto
 
 # --- live initramfs -------------------------------------------------------
-# lb_chroot_hacks regenerates /boot/initrd.img after our hooks run. With its
-# MODULES=dep default that archive ends up with no kernel modules at all,
-# which makes casper panic with "no support found" for overlay. The 0950 hook
-# stashed the verified initramfs; use that one for the live session.
-STASH="$ROOT/chroot/var/tmp/aurelia-initrd.img"
-if [ ! -f "$STASH" ]; then
-    echo "E: the live initramfs stash is missing; the 0950 hook did not run." >&2
-    exit 1
+# lb_chroot_hacks regenerates /boot/initrd.img after our hooks and, with its
+# MODULES=dep default, leaves every kernel module out. The 0950 hook kept the
+# verified initramfs inside the chroot, so recover it from the finished
+# squashfs and use it for /casper on the live ISO.
+SQUASHFS="$ROOT/binary/casper/filesystem.squashfs"
+LIVE_INITRD="$ROOT/build/aurelia-live-initrd.img"
+[ -f "$SQUASHFS" ] || { echo "E: $SQUASHFS is missing." >&2; exit 1; }
+command -v unsquashfs >/dev/null 2>&1 || { echo "E: unsquashfs is missing." >&2; exit 1; }
+rm -f "$LIVE_INITRD"
+unsquashfs -cat "$SQUASHFS" etc/aurelia-live-initrd.img > "$LIVE_INITRD"
+[ -s "$LIVE_INITRD" ] || { echo "E: the live initramfs stash is missing from the squashfs." >&2; exit 1; }
+if command -v lsinitramfs >/dev/null 2>&1; then
+    lsinitramfs "$LIVE_INITRD" | grep -q 'overlayfs/overlay.ko'         || { echo "E: the stashed initramfs lacks overlayfs." >&2; exit 1; }
 fi
+REPLACED=0
 for img in "$ROOT/binary/casper/"initrd.img*; do
     [ -f "$img" ] || continue
-    cp -f "$STASH" "$img"
+    cp -f "$LIVE_INITRD" "$img"
+    REPLACED=1
     echo "casper initramfs: $img"
 done
-if command -v lsinitramfs >/dev/null 2>&1; then
-    for img in "$ROOT/binary/casper/"initrd.img*; do
-        [ -f "$img" ] || continue
-        lsinitramfs "$img" | grep -q 'overlayfs/overlay.ko' \
-            || { echo "E: $img lacks overlayfs" >&2; exit 1; }
-    done
-fi
+[ "$REPLACED" = 1 ] || { echo "E: binary/casper has no initrd to replace." >&2; exit 1; }
 
 # --- BIOS + UEFI boot images -----------------------------------------------
 # Ubuntu 26.04 ships live-build 3.0~a57, whose GRUB2 helpers predate GRUB
