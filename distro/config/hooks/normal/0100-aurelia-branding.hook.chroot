@@ -10,6 +10,7 @@ ln -snf /usr/share/zoneinfo/Etc/UTC /etc/localtime
 chmod 0755 /usr/libexec/aurelia/aurelia-flatpak-setup
 chmod 0755 /usr/libexec/aurelia/aurelia-first-login
 chmod 0755 /usr/libexec/aurelia/aurelia-installer
+chmod 0755 /usr/bin/novair /usr/share/novair/novair.py
 
 # Casper/live-config otherwise rewrites the SDDM session at every boot.
 mkdir -p /var/lib/live/config

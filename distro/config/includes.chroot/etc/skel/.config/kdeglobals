@@ -2,7 +2,7 @@
 ColorScheme=Aurelia
 Name=AURELIA
 TerminalApplication=konsole
-BrowserApplication=org.kde.falkon.desktop
+BrowserApplication=novair.desktop
 font=Inter,10,-1,5,50,0,0,0,0,0
 menuFont=Inter,10,-1,5,50,0,0,0,0,0
 toolBarFont=Inter,9,-1,5,50,0,0,0,0,0

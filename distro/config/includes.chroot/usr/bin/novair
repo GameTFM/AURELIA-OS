@@ -1,0 +1,5 @@
+#!/bin/sh
+# NOVAIR launcher. The Python application lives in the system data directory
+# so distribution packaging and static validation can inspect the real source.
+set -eu
+exec python3 /usr/share/novair/novair.py "$@"

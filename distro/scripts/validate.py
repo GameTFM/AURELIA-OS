@@ -106,6 +106,7 @@ def check_shell() -> None:
         INCLUDE / "usr/libexec/aurelia/aurelia-flatpak-setup",
         INCLUDE / "usr/libexec/aurelia/aurelia-first-login",
         INCLUDE / "usr/libexec/aurelia/aurelia-installer",
+        INCLUDE / "usr/bin/novair",
     ]
     for path in sorted(set(shell_paths)):
         if not path.exists():
@@ -239,6 +240,10 @@ def check_required_payload() -> None:
         "usr/share/fonts/truetype/aurelia/PlayfairDisplay.ttf",
         "usr/share/fonts/truetype/aurelia/OFL.txt",
         "usr/share/applications/install-aurelia.desktop",
+        "usr/share/applications/novair.desktop",
+        "usr/share/novair/novair.py",
+        "usr/bin/novair",
+        "usr/share/icons/hicolor/512x512/apps/novair.png",
         "usr/libexec/aurelia/aurelia-first-login",
         "usr/libexec/aurelia/aurelia-installer",
         "etc/calamares/settings.conf",
@@ -311,7 +316,7 @@ def check_branding_and_installer() -> None:
     layout = (
         INCLUDE / "usr/share/plasma/look-and-feel/org.aurelia.solstice/contents/layouts/org.kde.plasma.desktop-layout.js"
     ).read_text(encoding="utf-8")
-    for token in ["org.aurelia.clock", "org.aurelia.calendar", "org.kde.plasma.notes", "org.kde.plasma.mediacontroller", "org.kde.plasma.icontasks", "org.kde.plasma.kickoff"]:
+    for token in ["org.aurelia.clock", "org.aurelia.calendar", "org.kde.plasma.notes", "org.kde.plasma.mediacontroller", "org.kde.plasma.weather", "org.kde.plasma.systemmonitor", "org.kde.plasma.icontasks", "org.kde.plasma.kickoff", "novair.desktop"]:
         if token not in layout:
             fail(f"Plasma layout missing {token}")
         else:
@@ -331,6 +336,7 @@ def check_images() -> None:
     expected = {
         "usr/share/wallpapers/AureliaSolstice/contents/images/3840x2160.png": (3840, 2160),
         "usr/share/wallpapers/AureliaIvory/contents/images/3840x2160.png": (3840, 2160),
+        "usr/share/icons/hicolor/512x512/apps/novair.png": (512, 512),
         "usr/share/sddm/themes/aurelia/background.png": (1920, 1080),
         "etc/calamares/branding/aurelia/background.png": (1920, 1080),
         "boot/grub/themes/aurelia/background.png": (1920, 1080),
@@ -398,6 +404,27 @@ def check_packages() -> None:
         passed(f"all {len(requested)} package names exist in resolute archive")
 
 
+def check_novair() -> None:
+    source = (INCLUDE / "usr/share/novair/novair.py").read_text(encoding="utf-8")
+    for token in (
+        "QWebEngineView",
+        "QWebEngineProfile",
+        "setUrlRequestInterceptor",
+        "new_tab_html",
+        "DownloadState",
+        "novair.db",
+    ):
+        if token not in source:
+            fail(f"NOVAIR source is missing {token}")
+        else:
+            passed(f"NOVAIR token {token}")
+    launcher = (INCLUDE / "usr/bin/novair").read_text(encoding="utf-8")
+    if "/usr/share/novair/novair.py" not in launcher:
+        fail("NOVAIR launcher does not invoke the installed application")
+    else:
+        passed("NOVAIR launcher target")
+
+
 def main() -> int:
     print("AURELIA static validation")
     check_json()
@@ -409,6 +436,7 @@ def main() -> int:
     check_qml()
     check_required_payload()
     check_branding_and_installer()
+    check_novair()
     check_images()
     check_lean_policy()
     check_packages()

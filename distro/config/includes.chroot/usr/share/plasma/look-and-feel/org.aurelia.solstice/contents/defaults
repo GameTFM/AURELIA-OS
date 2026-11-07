@@ -2,7 +2,7 @@
 ColorScheme=Aurelia
 Name=AURELIA
 TerminalApplication=konsole
-BrowserApplication=org.kde.falkon.desktop
+BrowserApplication=novair.desktop
 
 [kdeglobals][KDE]
 LookAndFeelPackage=org.aurelia.solstice

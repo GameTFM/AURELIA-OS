@@ -18,6 +18,10 @@ required="
 /etc/calamares/modules/unpackfsc.conf
 /etc/calamares/modules/bootloader.conf
 /usr/share/applications/install-aurelia.desktop
+/usr/share/applications/novair.desktop
+/usr/share/novair/novair.py
+/usr/bin/novair
+/usr/share/icons/hicolor/512x512/apps/novair.png
 /usr/share/fonts/truetype/aurelia/PlayfairDisplay.ttf
 /usr/libexec/aurelia/aurelia-first-login
 "
@@ -36,5 +40,14 @@ for binary in sddm Xorg calamares plasmashell startplasma-wayland kwin_wayland; 
         exit 1
     fi
 done
+
+# NOVAIR is a real Qt WebEngine application. This checks the installed Python
+# binding and the launcher without opening a display or a browser window.
+python3 /usr/share/novair/novair.py --self-test
+
+if [ ! -x /usr/bin/novair ]; then
+    echo "AURELIA NOVAIR launcher is not executable" >&2
+    exit 1
+fi
 
 echo "AURELIA payload verification OK"

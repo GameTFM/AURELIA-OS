@@ -18,6 +18,15 @@ top.height = Math.round(screen.height * 0.032);
 top.hiding = "none";
 top.alignment = "left";
 top.lengthMode = "fill";
+
+// AURELIA application launcher at the left edge of the top bar. The same
+// real Kickoff instance is available in the dock; this one gives the top bar
+// the launcher affordance shown in the reference layout.
+var topLauncher = top.addWidget("org.kde.plasma.kickoff");
+topLauncher.currentConfigGroup = ["Configuration", "General"];
+topLauncher.writeConfig("icon", "aurelia-logo");
+topLauncher.writeConfig("favoritesDisplay", 0);
+
 top.addWidget("org.kde.plasma.appmenu");
 
 var topSpacer = top.addWidget("org.kde.plasma.panelspacer");
@@ -53,7 +62,11 @@ launcher.writeConfig("favorites", [
     "org.kde.ark.desktop",
     "systemsettings.desktop",
     "org.kde.discover.desktop",
-    "org.kde.falkon.desktop",
+    "novair.desktop",
+    "org.kde.kclock.desktop",
+    "org.kde.haruna.desktop",
+    "org.kde.kamoso.desktop",
+    "org.kde.korganizer.desktop",
     "org.kde.elisa.desktop",
     "org.kde.plasma-systemmonitor.desktop"
 ]);
@@ -69,7 +82,11 @@ tasks.writeConfig("launchers", [
     "applications:org.kde.ark.desktop",
     "applications:systemsettings.desktop",
     "applications:org.kde.discover.desktop",
-    "applications:org.kde.falkon.desktop",
+    "applications:novair.desktop",
+    "applications:org.kde.kclock.desktop",
+    "applications:org.kde.haruna.desktop",
+    "applications:org.kde.kamoso.desktop",
+    "applications:org.kde.korganizer.desktop",
     "applications:org.kde.elisa.desktop",
     "applications:org.kde.plasma-systemmonitor.desktop"
 ]);
@@ -115,3 +132,22 @@ desktop.addWidget("org.kde.plasma.mediacontroller",
     Math.round(screen.height * 0.53),
     mediaWidth,
     mediaHeight);
+
+// Real KDE Weather and System Monitor widgets complete the widget set.
+// Weather remains empty until a location is chosen, and System Monitor shows
+// real system sensors; neither invents data.
+var weatherWidth = Math.max(250, Math.round(screen.width * 0.155));
+var weatherHeight = Math.max(190, Math.round(screen.height * 0.20));
+desktop.addWidget("org.kde.plasma.weather",
+    screen.width - weatherWidth - Math.round(screen.width * 0.022),
+    Math.round(screen.height * 0.45),
+    weatherWidth,
+    weatherHeight);
+
+var monitorWidth = Math.max(280, Math.round(screen.width * 0.17));
+var monitorHeight = Math.max(170, Math.round(screen.height * 0.18));
+desktop.addWidget("org.kde.plasma.systemmonitor",
+    screen.width - monitorWidth - Math.round(screen.width * 0.022),
+    Math.round(screen.height * 0.70),
+    monitorWidth,
+    monitorHeight);

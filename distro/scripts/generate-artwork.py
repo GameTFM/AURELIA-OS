@@ -21,6 +21,8 @@ WIDTH, HEIGHT = 3840, 2160
 GOLD = (214, 184, 120)
 IVORY = (244, 240, 231)
 MIDNIGHT = (9, 10, 14)
+BLUE = (73, 183, 228)
+DEEP_BLUE = (7, 22, 33)
 FONT = ASSETS / "fonts" / "PlayfairDisplay.ttf"
 
 
@@ -217,6 +219,36 @@ def logo_image(size: int = 1024) -> Image.Image:
     return image
 
 
+def novair_logo_image(size: int = 1024) -> Image.Image:
+    """NOVAIR's own orbital N mark, distinct from the AURELIA monogram."""
+    image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+    inset = int(size * 0.035)
+    radius = int(size * 0.22)
+    draw.rounded_rectangle(
+        (inset, inset, size - inset, size - inset),
+        radius=radius,
+        fill=DEEP_BLUE + (255,),
+        outline=(25, 111, 151, 255),
+        width=max(2, size // 160),
+    )
+    ring_box = (int(size * 0.17), int(size * 0.17), int(size * 0.83), int(size * 0.83))
+    draw.ellipse(ring_box, outline=BLUE + (165,), width=max(2, size // 220))
+    draw.arc(ring_box, 200, 340, fill=(190, 239, 255, 235), width=max(3, size // 90))
+    for x, y in ((size * 0.30, size * 0.28), (size * 0.73, size * 0.38),
+                 (size * 0.64, size * 0.74), (size * 0.27, size * 0.63)):
+        r = max(6, size // 52)
+        draw.ellipse((x - r, y - r, x + r, y + r), fill=BLUE + (255,))
+        draw.ellipse((x - r // 2, y - r // 2, x + r // 2, y + r // 2),
+                     fill=(226, 250, 255, 235))
+    font = ImageFont.truetype(str(FONT), int(size * 0.40))
+    bbox = draw.textbbox((0, 0), "N", font=font)
+    tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+    draw.text(((size - tw) / 2 - bbox[0], (size - th) / 2 - bbox[1] - size * 0.01), "N",
+              font=font, fill=(238, 251, 255, 255))
+    return image
+
+
 def center_crop(image: Image.Image, width: int, height: int) -> Image.Image:
     ratio = max(width / image.width, height / image.height)
     resized = image.resize((int(image.width * ratio + 0.5), int(image.height * ratio + 0.5)),
@@ -242,6 +274,12 @@ def install_artwork(wall_dark: Image.Image, wall_light: Image.Image) -> None:
     save(logo, ASSETS / "branding" / "aurelia-logo.png")
     save(logo, INCLUDE / "usr/share/icons/hicolor/512x512/apps/aurelia-logo.png")
     save(logo, INCLUDE / "etc/calamares/branding/aurelia/logo.png")
+
+    novair = novair_logo_image()
+    save(novair, ASSETS / "branding" / "novair-logo.png")
+    for icon_size in (512, 256, 48):
+        save(novair.resize((icon_size, icon_size), Image.Resampling.LANCZOS),
+             INCLUDE / f"usr/share/icons/hicolor/{icon_size}x{icon_size}/apps/novair.png")
 
     save(wall_dark, INCLUDE / "usr/share/wallpapers/AureliaSolstice/contents/images/3840x2160.png")
     save(wall_light, INCLUDE / "usr/share/wallpapers/AureliaIvory/contents/images/3840x2160.png")

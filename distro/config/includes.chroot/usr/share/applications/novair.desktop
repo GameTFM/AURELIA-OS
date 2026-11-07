@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NOVAIR
+GenericName=Web Browser
+Comment=Browse the web with the AURELIA OS browser
+Exec=novair %U
+TryExec=novair
+Icon=novair
+Terminal=false
+StartupNotify=true
+StartupWMClass=NOVAIR
+Categories=Network;WebBrowser;
+Keywords=browser;web;internet;novair;aurelia;
+MimeType=text/html;text/xml;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;

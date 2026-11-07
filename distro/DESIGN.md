@@ -71,7 +71,7 @@ logical screens.
 - **Calendar**: real current month, real leap years, previous/next month
   controls, today highlight only in the current month.
 - **Notes**: KDE's persistent notes applet; editable by the user.
-- **Media**: KDE's MPRIS media controller; functional when Elisa/Falkon/etc.
+- **Media**: KDE's MPRIS media controller; functional when Elisa/NOVAIR/etc.
   exposes a player. Empty state is honest rather than simulated.
 - **Dock**: Kickoff, Icon Tasks, Breeze icons; pinned applications are real
   desktop files.

@@ -21,13 +21,14 @@ track; it is no longer the base of the desktop release.
 | Packages | APT + Flathub/Flatpak |
 | Bootloader | GRUB 2, BIOS + UEFI packages, `shim-signed` |
 | Installer | Calamares 3.3.14 + `unpackfsc` |
+| Browser | NOVAIR 1.0, original PyQt6 interface on Qt WebEngine |
 | Kernel | Ubuntu `linux-image-generic` |
 | Languages | C++, Python, Bash (theme QML/JS + Python build tooling) |
 | ISO builder | live-build with Casper initramfs |
 | Live user | `aurelia`, automatic SDDM login |
 
 Package names were checked against the real `resolute` `main`, `restricted`,
-`universe` and `multiverse` indexes. All **101** package entries exist,
+`universe` and `multiverse` indexes. All **107** package entries exist,
 including the 27 explicit runtime supplements.
 
 ## Lean by design

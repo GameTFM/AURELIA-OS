@@ -32,7 +32,7 @@ Covered:
 - 23 required payload files plus the three live-build entrypoints;
 - Calamares 3.3 `style` map, required install steps, flat `unpackfsc` schema;
 - 5 generated image dimensions;
-- all **101** package names in the lists, including the explicit runtime list;
+- all **107** package names in the lists, including the explicit runtime list;
 - the lean package policy: no forbidden bloat packages, no duplicate entries and
   `--apt-recommends false` in `auto/config`.
 
@@ -42,7 +42,7 @@ The package lists were compared against the real `resolute`
 `main`, `restricted`, `universe` and `multiverse` amd64 indexes downloaded from
 `archive.ubuntu.com` on 2026-11-07.
 
-- Requested unique packages: **101**
+- Requested unique packages: **107**
 - Absent from the archive: **0**
 - APT recommends are disabled (`--apt-recommends false`) so optional KDE
   components cannot be pulled back in.
