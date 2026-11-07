@@ -1,0 +1,7 @@
+# Loaded early by the AURELIA live session.
+overlay
+squashfs
+loop
+isofs
+sr_mod
+cdrom
