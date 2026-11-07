@@ -10,13 +10,13 @@ APT and Flatpak, GRUB, the Ubuntu Linux kernel, and live-build/Casper.
 The earlier bespoke AURELIA kernel and software desktop are preserved as the
 legacy research track. They are not the base of the current distribution.
 
-> **Status: source and static profile complete; no ISO built or booted here.**
-> This workspace is Windows with no WSL distribution, Docker, `live-build` or
-> `debootstrap`. The complete Ubuntu 26.04 image profile is in [`distro/`](distro/),
-> the static validator passes, and the legacy kernel still builds. Build and
-> runtime verification must happen on Ubuntu 26.04 or the provided CI
-> container. Read [`distro/VERIFICATION.md`](distro/VERIFICATION.md) before
-> claiming a bootable release.
+> **Status: the Ubuntu/KDE image builds in CI and boots to the live Plasma
+> desktop under BIOS QEMU; UEFI reaches GRUB and the graphical boot splash.**
+> The 2.4 GB hybrid ISO is produced by the `ubuntu:26.04` GitHub Actions
+> workflow. Calamares is configured but a complete disk installation and
+> installed-system boot have not been exercised yet. Read
+> [`distro/VERIFICATION.md`](distro/VERIFICATION.md) for the exact evidence and
+> open gaps before calling this a finished release.
 
 ## Stack
 
@@ -28,15 +28,20 @@ legacy research track. They are not the base of the current distribution.
 | Packages | APT + Flatpak/Flathub |
 | Bootloader | GRUB 2 (BIOS/UEFI packages, `shim-signed`) |
 | Installer | Calamares 3.3.14 with `unpackfsc` |
+| Browser | NOVAIR 1.0, a PyQt6 interface on Qt WebEngine |
+| First login | AURELIA Setup, 13 local setup screens |
 | Kernel | Ubuntu `linux-image-generic` |
 | Tooling | C++, Python, Bash, QML/JavaScript |
 | ISO builder | live-build with Casper |
 
 ## Get the image
 
-No current AURELIA Ubuntu/KDE ISO is published yet. The Windows downloader
-stages an existing local build, or fetches a published ISO from a URL you
-supply while verifying its SHA-256. It will not silently fall back to the
+The Ubuntu/KDE ISO is built as a GitHub Actions artifact. A published release
+with the split image, checksum and reassembly instructions is prepared from
+that artifact; until a release asset is live, use the workflow artifact from
+the run named in [`distro/VERIFICATION.md`](distro/VERIFICATION.md). The
+Windows downloader stages an existing local build, or fetches an ISO from a URL
+you supply while verifying its SHA-256. It will not silently fall back to the
 legacy demo.
 
 ```powershell
@@ -80,8 +85,9 @@ distro/build/live-build.log
 
 The current Windows host cannot run this build. The GitHub Actions workflow at
 [`.github/workflows/aurelia-iso.yml`](.github/workflows/aurelia-iso.yml) builds
-inside an `ubuntu:26.04` container when run; it has not been executed from this
-workspace.
+inside an `ubuntu:26.04` container and uploads the ISO, checksum and build log.
+Several runs have completed; the latest artifact is the one described in
+[`distro/VERIFICATION.md`](distro/VERIFICATION.md).
 
 Static validation:
 
@@ -94,13 +100,21 @@ python3 scripts/validate.py
 
 - **Wallpaper** — original 3840×2160 Solstice mountains with framing pines and a
   low champagne sun, plus an ivory variant.
-- **Top bar** — Plasma Global Menu, system tray and digital clock.
+- **Top bar** — AURELIA launcher, Plasma Global Menu, system tray and digital
+  clock.
 - **Clock** — custom `org.aurelia.clock` applet: live weekday, time and date in
   Playfair Display, centered like the references.
 - **Calendar** — custom `org.aurelia.calendar` applet with working month
   navigation and real today highlighting.
 - **Right notes / lower-left media** — KDE Notes and Media Controller widgets.
   They show real notes/media and empty states, never fake data.
+- **Weather / system monitor** — stock KDE Weather and System Monitor widgets
+  on the right side. Weather stays empty until a location is configured.
+- **NOVAIR** — an original tabbed browser with a new-tab page, search,
+  bookmarks, history, downloads, private windows, settings, real permission
+  prompts and a tracker deny-list, built on Qt WebEngine.
+- **First login** — installed systems open the 13-screen AURELIA Setup flow;
+  the live ISO skips it and uses Calamares instead.
 - **Start menu** — Kickoff in grid mode with real pinned apps and native
   power/session actions.
 - **Dock** — floating, centered, fit-content Plasma panel with Icon Tasks.
@@ -115,10 +129,12 @@ tools. Plasma Discover is the single APT/Flatpak software center; no Snap
 package or Snap backend is requested, and optional apps can be installed from
 there.
 
-The Start menu is standard Kickoff, not a bespoke replacement. Weather,
-reminders and synthetic system cards from the reference images are not invented
-for the release. See [`distro/DESIGN.md`](distro/DESIGN.md) for the full visual
-mapping and [`distro/README.md`](distro/README.md) for limitations.
+The Start menu is standard Kickoff, not a bespoke replacement. Weather is the
+real KDE Weather widget and remains empty until configured; there is no stock
+Reminders widget, so the release does not invent one. Battery, volume, Wi-Fi,
+Bluetooth and quick settings come from the Plasma system tray. See
+[`distro/DESIGN.md`](distro/DESIGN.md) for the visual mapping and
+[`distro/README.md`](distro/README.md) for limitations.
 
 ## Repository layout
 

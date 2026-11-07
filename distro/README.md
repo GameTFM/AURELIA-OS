@@ -5,11 +5,14 @@ live-build, Casper, KDE Plasma 6.6, Wayland, SDDM, GRUB, Calamares, APT and
 Flatpak. The earlier bespoke AURELIA kernel is preserved as the legacy research
 track; it is no longer the base of the desktop release.
 
-> **Build status:** the complete source profile and 4K artwork are present, and
-> the static validator passes. **No ISO has been built or booted in this
-> workspace.** The host is Windows with no WSL distribution, Docker, `live-build`
-> or `debootstrap`. See [Build](#build), [Testing](TESTING.md) and
-> [Verification](VERIFICATION.md). Do not describe this as a tested ISO yet.
+> **Build status:** the source profile, 4K artwork and static validator are
+> complete, and CI produces a 2.4 GB BIOS/UEFI hybrid ISO on Ubuntu 26.04. The
+> live image has booted to the Plasma desktop under BIOS QEMU, while UEFI
+> reaches GRUB and the graphical boot splash. The
+> Calamares install path and the installed system have **not** been run yet. The
+> local host is Windows with no WSL distribution, Docker, `live-build` or
+> `debootstrap`, so builds happen in GitHub Actions. See [Build](#build),
+> [Testing](TESTING.md) and [Verification](VERIFICATION.md) for the evidence.
 
 ## Stack
 
@@ -74,9 +77,11 @@ distro/live-image-amd64.hybrid.iso.sha256
 distro/build/live-build.log
 ```
 
-GitHub Actions can build the same target in an `ubuntu:26.04` container via
-[`aurelia-iso.yml`](../.github/workflows/aurelia-iso.yml). That workflow has not
-been run from this workspace and is not evidence of a built ISO.
+GitHub Actions builds the same target in an `ubuntu:26.04` container via
+[`aurelia-iso.yml`](../.github/workflows/aurelia-iso.yml), with privileged loop
+mounts for live-build, and uploads the ISO, SHA-256 and build log. See
+[Verification](VERIFICATION.md) for the latest completed run and the boot
+screenshots.
 
 ## First boot and installation
 
@@ -121,9 +126,9 @@ it early leaves the marker absent so it appears again at the next login.
 | Start menu | Kickoff in grid mode with pinned real applications | Stock KDE menu; power/account actions real |
 | Taskbar | Floating, centered, fit-content Plasma panel with Icon Tasks | Real windows and launchers |
 | Wallpaper | Original generated 4K mountain-and-pine scene + ivory variant | Installed image packages |
-| Sign-in | Custom AURELIA SDDM greeter with real `sddm.login()` | Functional, untested at runtime |
-| Installer | AURELIA-branded Calamares 3.3.14 | Static configuration validated, install untested |
-| Boot menu | AURELIA GRUB theme and installed-system branding | Static assets/config |
+| Sign-in | Custom AURELIA SDDM greeter with real `sddm.login()` | Live autologin reaches Plasma; greeter UI untested |
+| Installer | AURELIA-branded Calamares 3.3.14 | Static configuration validated, full install untested |
+| Boot menu | AURELIA GRUB theme and installed-system branding | GRUB menu reached in BIOS/UEFI QEMU |
 | Flatpak | Flathub registered once by a first-login helper with sudo/pkexec | Functional, network-dependent |
 
 The Start menu is KDE Kickoff, not a bespoke launcher; its grid/pinned content
@@ -189,11 +194,13 @@ the QML or that Calamares can install a disk. See [TESTING.md](TESTING.md).
 
 ## Known limitations and honest gaps
 
-- **No ISO has been produced here.** The build must run on a real Ubuntu 26.04
-  host or the CI container.
-- **No Plasma/Calamares runtime test has been performed.** QML rendering, first
-  login, layout application, SDDM login, Calamares partitioning and GRUB boot
-  remain to be exercised on a Linux build host/VM.
+- **The local Windows host still cannot build the image.** Builds run in the
+  GitHub Actions `ubuntu:26.04` container; the local workspace only boots and
+  inspects downloaded artifacts.
+- **Only the live session is runtime-tested.** Plasma renders, SDDM auto-login
+  reaches the desktop, and the Solstice layout loads in BIOS and UEFI QEMU.
+  First-login setup, Calamares partitioning/install, installed GRUB and
+  installed-system SDDM remain to be exercised.
 - **The Start menu is standard Kickoff.** It is configured in grid mode, but its
   popup dimensions/appearance are KDE's, not a new custom launcher.
 - **Weather, notes, media and the system monitor are real widgets.** Weather
