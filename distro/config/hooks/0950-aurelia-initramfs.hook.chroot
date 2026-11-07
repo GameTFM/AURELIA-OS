@@ -1,0 +1,36 @@
+#!/bin/sh
+# AURELIA: the live session mounts /casper/filesystem.squashfs and builds an
+# overlay cow on top of it.  casper aborts with
+#   /cow format specified as 'overlay' and no support found
+# when overlayfs is not in the initramfs, so build it late and verify it.
+set -eu
+
+KVER="$(ls -1 /lib/modules | sort -V | tail -n 1)"
+[ -n "$KVER" ] || { echo "AURELIA: no kernel modules found" >&2; exit 1; }
+
+for mod in kernel/fs/overlayfs/overlay.ko kernel/fs/squashfs/squashfs.ko; do
+    [ -e "/lib/modules/$KVER/$mod" ] || [ -e "/lib/modules/$KVER/$mod.zst" ] || {
+        echo "AURELIA: $mod missing for $KVER" >&2
+        exit 1
+    }
+done
+
+cat > /etc/initramfs-tools/modules <<'EOF'
+overlay
+squashfs
+loop
+isofs
+sr_mod
+cdrom
+EOF
+
+update-initramfs -u -k all
+
+for initrd in /boot/initrd.img-*; do
+    lsinitramfs "$initrd" | grep -q 'overlayfs/overlay.ko' || {
+        echo "AURELIA: $initrd does not contain overlayfs" >&2
+        exit 1
+    }
+done
+
+echo "AURELIA: live initramfs contains overlayfs for $KVER"

@@ -1,0 +1,28 @@
+#!/bin/sh
+set -eu
+export DEBIAN_FRONTEND=noninteractive
+
+systemctl enable sddm.service NetworkManager.service
+systemctl enable bluetooth.service || true
+systemctl set-default graphical.target
+
+ln -snf /usr/share/zoneinfo/Etc/UTC /etc/localtime
+chmod 0755 /usr/libexec/aurelia/aurelia-flatpak-setup
+chmod 0755 /usr/libexec/aurelia/aurelia-first-login
+chmod 0755 /usr/libexec/aurelia/aurelia-installer
+chmod 0755 /usr/libexec/aurelia/aurelia-setup-first-run
+chmod 0755 /usr/bin/novair /usr/share/novair/novair.py
+chmod 0755 /usr/bin/aurelia-setup /usr/share/aurelia-setup/aurelia-setup.py
+
+# Casper/live-config otherwise rewrites the SDDM session at every boot.
+mkdir -p /var/lib/live/config
+touch /var/lib/live/config/sddm
+chmod 0644 /etc/sddm.conf.d/20-aurelia.conf
+chmod 0644 /etc/sddm.conf.d/zzzz-aurelia-live.conf
+
+fc-cache -f
+update-desktop-database /usr/share/applications || true
+
+# live-build builds the Casper initramfs. Calamares refreshes the target
+# initramfs after removing live-config diverts; doing it here can be
+# diverted by live-config and is intentionally avoided.
