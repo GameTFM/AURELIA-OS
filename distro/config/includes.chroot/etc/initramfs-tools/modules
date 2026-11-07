@@ -1,7 +1,6 @@
-# Loaded early by the AURELIA live session.
+# Loaded early by the AURELIA live session.  squashfs and loop are built into
+# the Ubuntu generic kernel; overlayfs is still a module.
 overlay
-squashfs
-loop
 isofs
 sr_mod
 cdrom

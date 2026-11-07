@@ -3,21 +3,20 @@
 # overlay cow on top of it.  casper aborts with
 #   /cow format specified as 'overlay' and no support found
 # when overlayfs is not in the initramfs, so build it late and verify it.
+# squashfs and loop are built into this kernel; only overlayfs is a module.
 set -eu
 
 KVER="$(ls -1 /lib/modules | sort -V | tail -n 1)"
 [ -n "$KVER" ] || { echo "AURELIA: no kernel modules found" >&2; exit 1; }
 
-for mod in kernel/fs/overlayfs/overlay.ko kernel/fs/squashfs/squashfs.ko; do
-    [ -e "/lib/modules/$KVER/$mod" ] || [ -e "/lib/modules/$KVER/$mod.zst" ] || {
-        echo "AURELIA: $mod missing for $KVER" >&2
-        exit 1
-    }
-done
+overlay="kernel/fs/overlayfs/overlay.ko"
+if [ ! -e "/lib/modules/$KVER/$overlay" ] && [ ! -e "/lib/modules/$KVER/$overlay.zst" ]; then
+    echo "AURELIA: $overlay missing for $KVER" >&2
+    exit 1
+fi
 
 cat > /etc/initramfs-tools/modules <<'EOF'
 overlay
-squashfs
 loop
 isofs
 sr_mod
