@@ -27,7 +27,7 @@ required="
 /usr/libexec/aurelia/aurelia-setup-first-run
 /usr/share/fonts/truetype/aurelia/PlayfairDisplay.ttf
 /usr/libexec/aurelia/aurelia-first-login
-"/
+"
 
 for path in $required; do
     if [ ! -f "$path" ]; then
