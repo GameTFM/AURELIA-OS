@@ -58,11 +58,13 @@ sudo scripts/build-iso.sh
 1. refuses non-26.04 hosts;
 2. runs `scripts/validate.py`;
 3. regenerates artwork from code;
-4. installs `genisoimage`/`isohybrid` compatibility wrappers in `/usr/local/bin`
-   because Ubuntu 26.04's live-build uses legacy tools that break on >4 GiB
-   squashfs images and GRUB2 hybrid MBRs;
-5. runs `lb build`, logs to `build/live-build.log`, writes the SHA-256, and
-   reports the ISO path.
+4. runs `lb build` for a plain ISO and logs to `build/live-build.log`;
+5. rebuilds the BIOS El Torito and EFI boot images with the host's GRUB 2.14,
+   because live-build 3.0~a57's GRUB2 helpers predate it, call `grub-mkimage`
+   without a prefix and never create a UEFI boot image;
+6. assembles `live-image-amd64.hybrid.iso` with xorriso, including a hybrid
+   MBR, a GPT EFI partition, and both BIOS and UEFI El Torito entries, then
+   writes the SHA-256 and reports the ISO path.
 
 The expected output is:
 
@@ -90,15 +92,32 @@ The live image uses Casper. Calamares unpacks
 `/cdrom/casper/filesystem.squashfs` with `unpackfsc`; it deliberately does not
 use rsync-based `unpackfs`, which is known to hit xattr `RERR_FILEIO` failures.
 
+### First-login setup
+
+On an installed system, the first KDE login opens **AURELIA Setup**, a real
+13-screen PyQt6 setup flow. It writes the chosen region and keyboard layout to
+KDE configuration, applies the Midnight or Ivory colour scheme, stores the
+selected accent, can copy a profile picture and can change the hostname through
+polkit. Its account, network and privacy buttons open the real KDE settings
+modules; it does not expose controls that do nothing.
+
+The autostart guard skips `/run/live`, so the flow never covers the live
+installer. A completed setup writes `~/.config/aurelia-setup-complete`; closing
+it early leaves the marker absent so it appears again at the next login.
+
 ## What the desktop actually is
 
 | Surface | Implementation | Status |
 |---|---|---|
-| Top bar | Plasma panel: Global Menu, expanding spacer, system tray, digital clock | Real Plasma widgets |
+| Top bar | Plasma panel: AURELIA launcher, Global Menu, expanding spacer, system tray, digital clock | Real Plasma widgets |
 | Large clock | Custom `org.aurelia.clock` applet: live weekday, 24-hour time, date | Live system time |
 | Left calendar | Custom `org.aurelia.calendar` applet: current month, today highlight, previous/next month controls | Live system date, working navigation |
 | Right notes | Stock KDE Notes applet `org.kde.plasma.notes` | Real editable notes |
 | Lower-left media | Stock KDE Media Controller `org.kde.plasma.mediacontroller` | Real MPRIS media when playing; empty otherwise |
+| Right weather | Stock KDE Weather `org.kde.plasma.weather` | Real widget; empty until a location is chosen |
+| Right system monitor | Stock KDE System Monitor `org.kde.plasma.systemmonitor` | Real sensors |
+| Browser | NOVAIR 1.0: PyQt6/Qt WebEngine tabs, new-tab page, bookmarks, history, downloads, private profile, settings, permissions and tracker blocklist | Real Qt WebEngine session |
+| First login | AURELIA Setup, 13 local screens on installed systems only | Real configuration writes; live ISO uses Calamares |
 | Start menu | Kickoff in grid mode with pinned real applications | Stock KDE menu; power/account actions real |
 | Taskbar | Floating, centered, fit-content Plasma panel with Icon Tasks | Real windows and launchers |
 | Wallpaper | Original generated 4K mountain-and-pine scene + ivory variant | Installed image packages |
@@ -108,8 +127,24 @@ use rsync-based `unpackfs`, which is known to hit xattr `RERR_FILEIO` failures.
 | Flatpak | Flathub registered once by a first-login helper with sudo/pkexec | Functional, network-dependent |
 
 The Start menu is KDE Kickoff, not a bespoke launcher; its grid/pinned content
-is configured by the layout script. The Notes and Media Controller cards are
-KDE's real widgets, not fake reference screenshots.
+is configured by the layout script. The Notes, Media Controller, Weather and
+System Monitor cards are KDE's real widgets, not fake reference screenshots.
+
+### NOVAIR
+
+NOVAIR is an original browser shell, not a renamed copy of an existing browser.
+Qt WebEngine provides the Chromium-derived renderer and network stack; NOVAIR
+provides the tabs, address/search bar, new-tab page, bookmarks, history,
+download manager, private window profile, settings, website-permission prompts,
+context menu and developer inspection surface. The new-tab page shows real
+bookmarks, recent history and a live local clock. Its search engine, homepage,
+theme, pop-up policy and tracker blocking setting are stored in
+`~/.config/novair/settings.json`; history and bookmarks live in
+`~/.local/share/novair/novair.db`.
+
+The browser does not claim Chrome-extension support, a password vault, reader
+mode or in-page translation. Those features are not currently implemented and
+are not shown as placeholder controls.
 
 ### Applying the layout
 
@@ -134,7 +169,8 @@ calendar, and a floating centered dock.
 - `assets/wallpapers/aurelia-ivory.png` — 3840×2160 ivory variant.
 - `Aurelia.colors` — full Midnight/Ivory/Champagne palette.
 - `AureliaSolstice` and `AureliaIvory` Plasma wallpaper packages.
-- Original AURELIA monogram (PNG/SVG), Calamares/SDDM/GRUB backgrounds.
+- Original AURELIA hexagonal network mark (PNG), Calamares/SDDM/GRUB
+  backgrounds, and a separate NOVAIR orbital N icon.
 - Playfair Display for the editorial clock; Inter for UI; both OFL-compatible.
   The bundled Playfair license is installed with the font.
 
@@ -160,9 +196,19 @@ the QML or that Calamares can install a disk. See [TESTING.md](TESTING.md).
   remain to be exercised on a Linux build host/VM.
 - **The Start menu is standard Kickoff.** It is configured in grid mode, but its
   popup dimensions/appearance are KDE's, not a new custom launcher.
-- **No fake weather, reminders, Now Playing content, battery data or hardware
-  telemetry is shown.** Notes/media are real KDE widgets; they may show empty
-  states until the user creates a note or plays media.
+- **Weather, notes, media and the system monitor are real widgets.** Weather
+  remains empty until a location is configured. There is no stock Reminders
+  widget, so the release does not invent one. Battery, network and volume live
+  in the Plasma system tray.
+- **NOVAIR implements the core browser, not every item in the wish list.** It
+  has tabs, bookmarks, history, downloads, private browsing, settings, find,
+  permissions, pop-up blocking, tracker blocking and developer inspection. It
+  does not implement Chrome extensions, a password vault, reader mode or
+  in-page translation, and does not display those as working features.
+- **The first-login setup is installed-system only.** It deliberately does not
+  run on the live ISO, where Calamares is the setup path. The setup's 13 screens
+  were rendered through Qt offscreen during development, but the KDE/plasma
+  integration still needs a booted installed-system test.
 - **The live/BIOS USB hybrid path is not fully guaranteed.** The build uses the
   documented `isohybrid` stub to get past live-build's GRUB2 false failure. The
   resulting El Torito ISO is intended for VM/DVD/UEFI boot; raw BIOS USB hybrid
@@ -194,7 +240,10 @@ distro/
     usr/share/plasma/           global theme + clock/calendar applets
     usr/share/sddm/themes/      custom greeter
     usr/share/wallpapers/       Plasma wallpaper packages
-    usr/libexec/aurelia/        first-login, installer, Flatpak helpers
+    usr/libexec/aurelia/        first-login, installer, Flatpak and setup helpers
+    usr/share/novair/           NOVAIR PyQt6/Qt WebEngine browser
+    usr/share/aurelia-setup/    13-screen first-login setup
+    usr/bin/                    novair and aurelia-setup launchers
   scripts/                      artwork, validation, build, QEMU boot
   assets/                       generated source artwork, font, license
 ```

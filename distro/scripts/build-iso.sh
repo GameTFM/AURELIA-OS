@@ -80,7 +80,7 @@ if [ -d "$TREE/boot/grub" ] && [ -f "$TREE/boot/grub/grub.cfg" ]; then
     WORK="$(mktemp -d)"
     EFI_CFG="$WORK/efi-grub.cfg"
     cat > "$EFI_CFG" <<'EOF'
-search --no-floppy --set=root --file /casper/vmlinuz
+search --no-floppy --set=root --label AURELIA_OS
 configfile /boot/grub/grub.cfg
 EOF
 
