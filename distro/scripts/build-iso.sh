@@ -45,6 +45,29 @@ echo "== building ISO =="
 # noauto skips the auto/build hook; this script is the build driver.
 lb build noauto
 
+# --- live initramfs -------------------------------------------------------
+# lb_chroot_hacks regenerates /boot/initrd.img after our hooks run. With its
+# MODULES=dep default that archive ends up with no kernel modules at all,
+# which makes casper panic with "no support found" for overlay. The 0950 hook
+# stashed the verified initramfs; use that one for the live session.
+STASH="$ROOT/chroot/var/tmp/aurelia-initrd.img"
+if [ ! -f "$STASH" ]; then
+    echo "E: the live initramfs stash is missing; the 0950 hook did not run." >&2
+    exit 1
+fi
+for img in "$ROOT/binary/casper/"initrd.img*; do
+    [ -f "$img" ] || continue
+    cp -f "$STASH" "$img"
+    echo "casper initramfs: $img"
+done
+if command -v lsinitramfs >/dev/null 2>&1; then
+    for img in "$ROOT/binary/casper/"initrd.img*; do
+        [ -f "$img" ] || continue
+        lsinitramfs "$img" | grep -q 'overlayfs/overlay.ko' \
+            || { echo "E: $img lacks overlayfs" >&2; exit 1; }
+    done
+fi
+
 # --- BIOS + UEFI boot images -----------------------------------------------
 # Ubuntu 26.04 ships live-build 3.0~a57, whose GRUB2 helpers predate GRUB
 # 2.14: its grub-mkimage call omits -p and fails, leaving a 2 KiB El Torito

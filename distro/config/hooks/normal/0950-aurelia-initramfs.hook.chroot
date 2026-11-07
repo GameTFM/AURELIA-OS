@@ -45,6 +45,13 @@ for initrd in /boot/initrd.img-*; do
     }
 done
 
+# live-build's chroot_hacks step regenerates /boot/initrd.img after the hooks
+# and, with MODULES=dep, leaves every kernel module out. Keep a copy of this
+# verified initramfs so the ISO builder can put it at /casper/initrd.img.
+mkdir -p /var/tmp
+cp -f "$initrd" /var/tmp/aurelia-initrd.img
+echo "AURELIA: stashed live initramfs at /var/tmp/aurelia-initrd.img"
+
 grep -q 'modprobe ${MP_QUIET} -b overlay' /usr/share/initramfs-tools/scripts/casper || {
     echo "AURELIA: casper modprobe quoting was not patched" >&2
     exit 1
