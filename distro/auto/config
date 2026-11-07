@@ -7,7 +7,7 @@ lb config noauto \
     --mode ubuntu \
     --distribution resolute \
     --architectures amd64 \
-    --binary-images iso-hybrid \
+    --binary-images iso \
     --initramfs casper \
     --bootloader grub2 \
     --initsystem systemd \
