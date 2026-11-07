@@ -48,6 +48,18 @@ legacy demo.
 The third form copies the 5.5 MB legacy custom-kernel image from `build/` and
 is explicitly labelled as the legacy demo, not the Ubuntu/KDE release.
 
+## Windows installer (Legacy Alpha)
+
+The verified legacy AURELIA kernel is available as a per-user Windows VM
+installer:
+
+[AURELIA-Setup.exe](https://github.com/GameTFM/AURELIA-OS/releases/download/v1.0.0-legacy-alpha/AURELIA-Setup.exe)
+
+It installs to `%LOCALAPPDATA%\AURELIA OS`, includes QEMU 11.1 and the 5.5 MB
+kernel ISO, creates desktop and Start Menu shortcuts, and launches a real
+AURELIA desktop in a virtual machine. It is unsigned and is **not** the
+Ubuntu/KDE release. There is no bare-metal installation yet.
+
 ## Build
 
 The image profile only builds on Ubuntu 26.04:
@@ -111,6 +123,7 @@ mapping and [`distro/README.md`](distro/README.md) for limitations.
 ## Repository layout
 
 ```text
+windows-installer/  per-user Windows VM installer for the legacy kernel
 distro/        current distribution: live-build, Plasma theme/applets,
                SDDM, Calamares, GRUB, Flatpak, artwork, docs and tests
 kernel/        legacy AURELIA freestanding kernel and its desktop/apps

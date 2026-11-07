@@ -45,10 +45,10 @@ mkdir -p "$ROOT/build"
 exec > >(tee -a "$ROOT/build/live-build.log") 2>&1
 
 echo "== AURELIA live-build configuration =="
-./auto/config
+bash ./auto/config
 
 echo "== building ISO =="
-./auto/build
+bash ./auto/build
 
 ISO="$ROOT/live-image-amd64.hybrid.iso"
 if [ ! -f "$ISO" ]; then

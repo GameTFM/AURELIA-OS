@@ -26,8 +26,8 @@ jobs:
             bash -lc '
               set -euo pipefail
               cd distro
-              ./scripts/install-build-deps.sh
-              ./scripts/build-iso.sh
+              bash ./scripts/install-build-deps.sh
+              bash ./scripts/build-iso.sh
             '
 
       - name: Upload ISO and checksum
