@@ -71,6 +71,18 @@ echo "live-build ISO: $PLAIN"
 
 TREE="$ROOT/binary"
 ISO="$ROOT/live-image-amd64.hybrid.iso"
+
+# live-build's GRUB template still says "Debian GNU/Linux", points at a
+# missing xbmc.tga, and waits forever for a keypress. Brand it, use the splash
+# that actually ships, and add a countdown for unattended boots.
+GRUB_CFG="$TREE/boot/grub/grub.cfg"
+if [ -f "$GRUB_CFG" ]; then
+    sed -i -e 's/Debian GNU\/Linux/AURELIA OS/g' \
+        -e 's|xbmc.tga|splash.tga|' "$GRUB_CFG"
+    if ! grep -q '^set timeout=' "$GRUB_CFG"; then
+        sed -i '/^set default=0/a set timeout=10' "$GRUB_CFG"
+    fi
+fi
 GRUB_BIOS="/usr/lib/grub/i386-pc"
 GRUB_EFI="/usr/lib/grub/x86_64-efi"
 BIOS_READY=0
