@@ -51,8 +51,11 @@ echo "== building ISO =="
 bash ./auto/build
 
 ISO="$ROOT/live-image-amd64.hybrid.iso"
+if [ ! -f "$ISO" ] && [ -f "$ROOT/binary.hybrid.iso" ]; then
+    mv "$ROOT/binary.hybrid.iso" "$ISO"
+fi
 if [ ! -f "$ISO" ]; then
-    echo "live-build completed but $ISO was not produced." >&2
+    echo "live-build completed but no ISO was produced ($ISO or binary.hybrid.iso)." >&2
     exit 1
 fi
 

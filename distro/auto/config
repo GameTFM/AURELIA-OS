@@ -20,7 +20,7 @@ lb config noauto \
     --mirror-binary "http://archive.ubuntu.com/ubuntu/" \
     --mirror-binary-security "http://security.ubuntu.com/ubuntu/" \
     --security true \
-    --updates true \
+    --volatile true \
     --source false \
     --debian-installer false \
     --memtest none \
