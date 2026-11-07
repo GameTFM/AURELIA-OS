@@ -36,13 +36,21 @@ legacy research track. They are not the base of the current distribution.
 
 ## Get the image
 
-The Ubuntu/KDE ISO is built as a GitHub Actions artifact. A published release
-with the split image, checksum and reassembly instructions is prepared from
-that artifact; until a release asset is live, use the workflow artifact from
-the run named in [`distro/VERIFICATION.md`](distro/VERIFICATION.md). The
-Windows downloader stages an existing local build, or fetches an ISO from a URL
-you supply while verifying its SHA-256. It will not silently fall back to the
-legacy demo.
+The Ubuntu/KDE ISO is published as a split GitHub release:
+[AURELIA OS 1.0 “Solstice”](https://github.com/GameTFM/AURELIA-OS/releases/tag/v1.0.0-solstice).
+Download every `aurelia-1.0-solstice.iso.part-*` file plus `JOIN-THE-ISO.txt`,
+join the parts, and verify the result before writing it to USB:
+
+```bash
+cat aurelia-1.0-solstice.iso.part-* > aurelia-1.0-solstice.iso
+sha256sum -c aurelia-1.0-solstice.iso.sha256
+```
+
+The verified SHA-256 is
+`b76f0b2144d7b51d11372374ad1e3613f354342270819701c32081031ff0f04b`
+(2,408,841,216 bytes). The Windows downloader stages an existing local build,
+or fetches an ISO from a URL you supply while verifying its SHA-256. It will
+not silently fall back to the legacy demo.
 
 ```powershell
 .\download-aurelia.cmd
