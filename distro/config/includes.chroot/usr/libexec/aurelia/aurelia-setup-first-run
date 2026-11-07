@@ -4,7 +4,8 @@
 # another setup window.
 set -eu
 
-if [ -d /run/live ]; then
+if [ -d /run/live ] || [ -d /cdrom/casper ] \
+    || grep -qw 'boot=casper' /proc/cmdline 2>/dev/null; then
     exit 0
 fi
 

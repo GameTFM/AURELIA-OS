@@ -1,0 +1,9 @@
+[Plymouth Theme]
+Name=AURELIA
+Description=AURELIA OS 1.0 Solstice
+ModuleName=two-step
+
+[two-step]
+ImageDir=/usr/share/plymouth/themes/aurelia
+Image=aurelia-logo.png
+BackgroundColor=0x090a0e

@@ -15,6 +15,10 @@ if [ ! -e "/lib/modules/$KVER/$overlay" ] && [ ! -e "/lib/modules/$KVER/$overlay
     exit 1
 fi
 
+if command -v plymouth-set-default-theme >/dev/null 2>&1; then
+    plymouth-set-default-theme aurelia >/dev/null 2>&1 || true
+fi
+
 cat > /etc/initramfs-tools/modules <<'EOF'
 overlay
 loop
