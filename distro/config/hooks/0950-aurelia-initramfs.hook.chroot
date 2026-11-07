@@ -2,7 +2,7 @@
 # AURELIA: the live session mounts /casper/filesystem.squashfs and builds an
 # overlay cow on top of it.  casper aborts with
 #   /cow format specified as 'overlay' and no support found
-# when overlayfs is not in the initramfs, so build it late and verify it.
+# when overlayfs is not available, so build the initramfs late and verify it.
 # squashfs and loop are built into this kernel; only overlayfs is a module.
 set -eu
 
@@ -23,6 +23,19 @@ sr_mod
 cdrom
 EOF
 
+# casper hardcodes BUILD_SYSTEM=Custom, so /scripts/casper-helpers leaves
+# MP_QUIET empty and /scripts/casper runs
+#   modprobe "" -b overlay
+# modprobe reads the empty string as the module name, fails, and panics every
+# live boot with "/cow format specified as 'overlay' and no support found".
+# Mark this image as Ubuntu-based and drop the quoting so an empty value can
+# never become a module argument again.
+for f in /usr/share/initramfs-tools/scripts/casper /usr/share/initramfs-tools/scripts/casper-helpers; do
+    [ -f "$f" ] || continue
+    sed -i 's|BUILD_SYSTEM=Custom|BUILD_SYSTEM=Ubuntu|' "$f"
+    sed -i 's|modprobe "${MP_QUIET}" -b overlay|modprobe ${MP_QUIET} -b overlay|' "$f"
+done
+
 update-initramfs -u -k all
 
 for initrd in /boot/initrd.img-*; do
@@ -31,5 +44,10 @@ for initrd in /boot/initrd.img-*; do
         exit 1
     }
 done
+
+grep -q 'modprobe ${MP_QUIET} -b overlay' /usr/share/initramfs-tools/scripts/casper || {
+    echo "AURELIA: casper modprobe quoting was not patched" >&2
+    exit 1
+}
 
 echo "AURELIA: live initramfs contains overlayfs for $KVER"
