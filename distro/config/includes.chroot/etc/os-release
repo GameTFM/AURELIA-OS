@@ -1,0 +1,13 @@
+NAME="AURELIA OS"
+VERSION="1.0 (Solstice)"
+ID=aurelia
+ID_LIKE=ubuntu
+PRETTY_NAME="AURELIA OS 1.0 (Solstice)"
+VERSION_ID="1.0"
+HOME_URL="https://github.com/GameTFM/AURELIA-OS"
+SUPPORT_URL="https://github.com/GameTFM/AURELIA-OS"
+BUG_REPORT_URL="https://github.com/GameTFM/AURELIA-OS"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal"
+VERSION_CODENAME=solstice
+UBUNTU_CODENAME=resolute
+LOGO=aurelia-logo

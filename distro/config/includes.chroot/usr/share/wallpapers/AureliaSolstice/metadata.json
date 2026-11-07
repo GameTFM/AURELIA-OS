@@ -1,0 +1,15 @@
+{
+    "KPackageStructure": "Wallpaper/Images",
+    "KPlugin": {
+        "Id": "AureliaSolstice",
+        "Name": "AURELIA Solstice",
+        "Description": "Midnight mountains and a low champagne sun",
+        "Authors": [
+            {
+                "Name": "AURELIA OS"
+            }
+        ],
+        "License": "CC-BY-SA-4.0",
+        "Version": "1.0.0"
+    }
+}

@@ -1,0 +1,47 @@
+#!/bin/sh
+# Calamares runs as root, but the live desktop is owned by uid 1000 on
+# Wayland. Grant root access to the socket, then use passwordless sudo when
+# available, with pkexec as the installed-user fallback. The installed system
+# does not keep this launcher.
+set -eu
+
+if [ -n "${WAYLAND_DISPLAY:-}" ] && [ -n "${XDG_RUNTIME_DIR:-}" ]; then
+    socket="$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"
+    for path in "$socket" "$socket.lock"; do
+        [ -e "$path" ] || continue
+        setfacl -m u:root:rw "$path" 2>/dev/null || chmod o+rw "$path" 2>/dev/null || true
+    done
+fi
+
+if [ "$(id -u)" -eq 0 ]; then
+    exec env \
+        DISPLAY="${DISPLAY:-}" \
+        WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-}" \
+        XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-}" \
+        XDG_SESSION_TYPE="${XDG_SESSION_TYPE:-wayland}" \
+        QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-wayland}" \
+        calamares
+fi
+
+if command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+    exec sudo -E env \
+        DISPLAY="${DISPLAY:-}" \
+        WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-}" \
+        XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-}" \
+        XDG_SESSION_TYPE="${XDG_SESSION_TYPE:-wayland}" \
+        QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-wayland}" \
+        calamares
+fi
+
+if command -v pkexec >/dev/null 2>&1; then
+    exec pkexec env \
+        DISPLAY="${DISPLAY:-}" \
+        WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-}" \
+        XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-}" \
+        XDG_SESSION_TYPE="${XDG_SESSION_TYPE:-wayland}" \
+        QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-wayland}" \
+        calamares
+fi
+
+echo "AURELIA installer: no sudo or pkexec available." >&2
+exit 1

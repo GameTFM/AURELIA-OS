@@ -1,0 +1,32 @@
+title-text: "AURELIA OS  1.0  ·  SOLSTICE"
+title-color: "#D6B878"
+title-font: "DejaVu Sans Bold 20"
+desktop-image: "background.png"
+desktop-color: "#090A0E"
+terminal-font: "DejaVu Sans Mono 14"
+
++ boot_menu {
+    left = 18%
+    top = 32%
+    width = 64%
+    height = 48%
+    item_font = "DejaVu Sans 16"
+    item_color = "#C9C4B9"
+    selected_item_color = "#D6B878"
+    item_height = 38
+    item_spacing = 8
+    item_padding = 10
+    icon_width = 26
+    icon_height = 26
+    scrollbar = false
+}
+
++ label {
+    left = 0
+    top = 89%
+    width = 100%
+    align = "center"
+    text = "Use ↑ / ↓ to choose  ·  Enter to boot"
+    font = "DejaVu Sans 11"
+    color = "#85838A"
+}

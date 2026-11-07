@@ -1,0 +1,42 @@
+name: AURELIA ISO
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "distro/**"
+      - ".github/workflows/aurelia-iso.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build inside Ubuntu 26.04
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --privileged --rm \
+            -v "$GITHUB_WORKSPACE:/work" \
+            -w /work \
+            ubuntu:26.04 \
+            bash -lc '
+              set -euo pipefail
+              cd distro
+              ./scripts/install-build-deps.sh
+              ./scripts/build-iso.sh
+            '
+
+      - name: Upload ISO and checksum
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-os-1.0-solstice
+          path: |
+            distro/live-image-amd64.hybrid.iso
+            distro/live-image-amd64.hybrid.iso.sha256
+            distro/build/live-build.log
+          if-no-files-found: error
+          retention-days: 7

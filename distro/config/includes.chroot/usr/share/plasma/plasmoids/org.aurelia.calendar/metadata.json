@@ -1,0 +1,23 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Id": "org.aurelia.calendar",
+        "Name": "AURELIA Calendar",
+        "Description": "Live month calendar with real previous and next month navigation",
+        "Icon": "view-calendar",
+        "Authors": [
+            {
+                "Name": "AURELIA OS"
+            }
+        ],
+        "Category": "Date and Time",
+        "License": "GPL-3.0-or-later",
+        "Version": "1.0.0",
+        "EnabledByDefault": true
+    },
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-MainScript": "ui/main.qml",
+    "X-Plasma-Provides": [
+        "org.kde.plasma.date"
+    ]
+}

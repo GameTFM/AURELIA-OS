@@ -1,0 +1,7 @@
+#!/bin/sh
+# live-build 3.0~a57 calls isohybrid after a GRUB2 image; Ubuntu's
+# syslinux isohybrid rejects the GRUB2 MBR signature and aborts. The ISO
+# keeps its El Torito BIOS/UEFI boot records; this stub unblocks the build.
+# A DVD/VM boot and UEFI USB boot remain supported. Raw BIOS USB hybrid boot
+# is not guaranteed and is reported as a limitation in the README.
+exit 0

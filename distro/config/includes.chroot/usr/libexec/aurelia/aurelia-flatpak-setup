@@ -1,0 +1,22 @@
+#!/bin/sh
+# Register Flathub once. Prefer passwordless sudo on the live image; installed
+# users get a normal pkexec prompt. The system remote is checked first.
+set -eu
+
+if flatpak remotes --system --columns=name 2>/dev/null | grep -qx "flathub"; then
+    exit 0
+fi
+
+if [ "$(id -u)" -ne 0 ]; then
+    if command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+        exec sudo -E "$0" "$@"
+    fi
+    if command -v pkexec >/dev/null 2>&1; then
+        exec pkexec "$0" "$@"
+    fi
+    echo "AURELIA Flatpak setup: no sudo or pkexec available." >&2
+    exit 1
+fi
+
+exec flatpak remote-add --system --if-not-exists \
+    flathub https://dl.flathub.org/repo/flathub.flatpakrepo

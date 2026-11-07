@@ -1,0 +1,15 @@
+{
+    "KPackageStructure": "Wallpaper/Images",
+    "KPlugin": {
+        "Id": "AureliaIvory",
+        "Name": "AURELIA Ivory",
+        "Description": "Ivory mist over the Solstice range",
+        "Authors": [
+            {
+                "Name": "AURELIA OS"
+            }
+        ],
+        "License": "CC-BY-SA-4.0",
+        "Version": "1.0.0"
+    }
+}

@@ -1,0 +1,40 @@
+#!/bin/sh
+set -eu
+
+required="
+/usr/share/plasma/look-and-feel/org.aurelia.solstice/metadata.json
+/usr/share/plasma/look-and-feel/org.aurelia.solstice/contents/layouts/org.kde.plasma.desktop-layout.js
+/usr/share/wayland-sessions/plasma.desktop
+/usr/share/plasma/plasmoids/org.aurelia.clock/metadata.json
+/usr/share/plasma/plasmoids/org.aurelia.clock/contents/ui/main.qml
+/usr/share/plasma/plasmoids/org.aurelia.calendar/metadata.json
+/usr/share/plasma/plasmoids/org.aurelia.calendar/contents/ui/main.qml
+/usr/share/color-schemes/Aurelia.colors
+/usr/share/wallpapers/AureliaSolstice/contents/images/3840x2160.png
+/usr/share/sddm/themes/aurelia/Main.qml
+/usr/share/sddm/themes/aurelia/background.png
+/etc/calamares/settings.conf
+/etc/calamares/branding/aurelia/branding.desc
+/etc/calamares/modules/unpackfsc.conf
+/etc/calamares/modules/bootloader.conf
+/usr/share/applications/install-aurelia.desktop
+/usr/share/fonts/truetype/aurelia/PlayfairDisplay.ttf
+/usr/libexec/aurelia/aurelia-first-login
+"
+
+for path in $required; do
+    if [ ! -f "$path" ]; then
+        echo "AURELIA payload missing: $path" >&2
+        exit 1
+    fi
+done
+
+# The runtime binary must not silently disappear from the Plasma dependency set.
+for binary in sddm Xorg calamares plasmashell startplasma-wayland kwin_wayland; do
+    if ! command -v "$binary" >/dev/null 2>&1; then
+        echo "AURELIA required binary missing: $binary" >&2
+        exit 1
+    fi
+done
+
+echo "AURELIA payload verification OK"

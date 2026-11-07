@@ -1,0 +1,32 @@
+#!/bin/sh
+# AURELIA OS live-build configuration.
+# Run this through live-build (auto/build) on Ubuntu 26.04, not on Windows.
+set -eu
+
+lb config noauto \
+    --mode ubuntu \
+    --distribution resolute \
+    --architectures amd64 \
+    --binary-images iso-hybrid \
+    --initramfs casper \
+    --bootloader grub2 \
+    --initsystem systemd \
+    --linux-flavours generic \
+    --archive-areas "main restricted universe multiverse" \
+    --apt-recommends false \
+    --mirror-bootstrap "http://archive.ubuntu.com/ubuntu/" \
+    --mirror-chroot "http://archive.ubuntu.com/ubuntu/" \
+    --mirror-chroot-security "http://security.ubuntu.com/ubuntu/" \
+    --mirror-binary "http://archive.ubuntu.com/ubuntu/" \
+    --mirror-binary-security "http://security.ubuntu.com/ubuntu/" \
+    --security true \
+    --updates true \
+    --source false \
+    --debian-installer false \
+    --memtest none \
+    --zsync false \
+    --bootappend-live "boot=casper live-media-path=casper quiet splash username=aurelia hostname=aurelia locale=en_US.UTF-8 keyboard-layouts=us" \
+    --iso-application "AURELIA OS 1.0" \
+    --iso-publisher "AURELIA OS Project" \
+    --iso-preparer "AURELIA live-build" \
+    --iso-volume "AURELIA_OS"

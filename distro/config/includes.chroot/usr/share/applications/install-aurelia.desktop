@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Install AURELIA OS
+GenericName=Install Operating System
+Comment=Install this live system to disk with Calamares
+Exec=/usr/libexec/aurelia/aurelia-installer
+Icon=aurelia-logo
+Terminal=false
+StartupNotify=true
+X-KDE-SubstituteUID=false
+Categories=System;Settings;
+Keywords=install;setup;calamares;aurelia;

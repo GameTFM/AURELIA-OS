@@ -1,0 +1,149 @@
+# AURELIA OS 1.0 “Solstice”
+
+**Repository:** [GameTFM/AURELIA-OS](https://github.com/GameTFM/AURELIA-OS)
+
+AURELIA OS is an original **Ubuntu 26.04 LTS-based desktop distribution** with
+KDE Plasma 6.6 on Wayland, a centered Solstice clock and calendar, a thin top
+bar, a clean floating dock, and a branded SDDM/Calamares/GRUB path. It uses
+APT and Flatpak, GRUB, the Ubuntu Linux kernel, and live-build/Casper.
+
+The earlier bespoke AURELIA kernel and software desktop are preserved as the
+legacy research track. They are not the base of the current distribution.
+
+> **Status: source and static profile complete; no ISO built or booted here.**
+> This workspace is Windows with no WSL distribution, Docker, `live-build` or
+> `debootstrap`. The complete Ubuntu 26.04 image profile is in [`distro/`](distro/),
+> the static validator passes, and the legacy kernel still builds. Build and
+> runtime verification must happen on Ubuntu 26.04 or the provided CI
+> container. Read [`distro/VERIFICATION.md`](distro/VERIFICATION.md) before
+> claiming a bootable release.
+
+## Stack
+
+| Component | Choice |
+|---|---|
+| Base | Ubuntu 26.04 LTS `resolute`, amd64 |
+| Desktop | KDE Plasma 6.6.x |
+| Session | Wayland (`plasma.desktop`); SDDM greeter uses Xorg |
+| Packages | APT + Flatpak/Flathub |
+| Bootloader | GRUB 2 (BIOS/UEFI packages, `shim-signed`) |
+| Installer | Calamares 3.3.14 with `unpackfsc` |
+| Kernel | Ubuntu `linux-image-generic` |
+| Tooling | C++, Python, Bash, QML/JavaScript |
+| ISO builder | live-build with Casper |
+
+## Get the image
+
+No current AURELIA Ubuntu/KDE ISO is published yet. The Windows downloader
+stages an existing local build, or fetches a published ISO from a URL you
+supply while verifying its SHA-256. It will not silently fall back to the
+legacy demo.
+
+```powershell
+.\download-aurelia.cmd
+.\download-aurelia.cmd -Url <published-iso-url> -Sha256 <sha256>
+.\download-aurelia.cmd -Legacy
+```
+
+The third form copies the 5.5 MB legacy custom-kernel image from `build/` and
+is explicitly labelled as the legacy demo, not the Ubuntu/KDE release.
+
+## Build
+
+The image profile only builds on Ubuntu 26.04:
+
+```bash
+cd distro
+sudo scripts/install-build-deps.sh
+sudo scripts/build-iso.sh
+```
+
+Expected artifacts:
+
+```text
+distro/live-image-amd64.hybrid.iso
+distro/live-image-amd64.hybrid.iso.sha256
+distro/build/live-build.log
+```
+
+The current Windows host cannot run this build. The GitHub Actions workflow at
+[`.github/workflows/aurelia-iso.yml`](.github/workflows/aurelia-iso.yml) builds
+inside an `ubuntu:26.04` container when run; it has not been executed from this
+workspace.
+
+Static validation:
+
+```bash
+cd distro
+python3 scripts/validate.py
+```
+
+## Desktop
+
+- **Wallpaper** — original 3840×2160 Solstice mountains with framing pines and a
+  low champagne sun, plus an ivory variant.
+- **Top bar** — Plasma Global Menu, system tray and digital clock.
+- **Clock** — custom `org.aurelia.clock` applet: live weekday, time and date in
+  Playfair Display, centered like the references.
+- **Calendar** — custom `org.aurelia.calendar` applet with working month
+  navigation and real today highlighting.
+- **Right notes / lower-left media** — KDE Notes and Media Controller widgets.
+  They show real notes/media and empty states, never fake data.
+- **Start menu** — Kickoff in grid mode with real pinned apps and native
+  power/session actions.
+- **Dock** — floating, centered, fit-content Plasma panel with Icon Tasks.
+- **Instance branding** — AURELIA SDDM greeter, Calamares installer, GRUB theme
+  and first-login global theme application.
+- **Installer** — Calamares with `unpackfsc`, GRUB, SDDM, initramfs refresh and
+  live-cleanup steps.
+
+The image is deliberately lean. It does not preinstall an office suite, KDE
+Connect, Filelight, a GTK theme bridge, an update notifier or build-only ISO
+tools. Plasma Discover is the single APT/Flatpak software center; no Snap
+package or Snap backend is requested, and optional apps can be installed from
+there.
+
+The Start menu is standard Kickoff, not a bespoke replacement. Weather,
+reminders and synthetic system cards from the reference images are not invented
+for the release. See [`distro/DESIGN.md`](distro/DESIGN.md) for the full visual
+mapping and [`distro/README.md`](distro/README.md) for limitations.
+
+## Repository layout
+
+```text
+distro/        current distribution: live-build, Plasma theme/applets,
+               SDDM, Calamares, GRUB, Flatpak, artwork, docs and tests
+kernel/        legacy AURELIA freestanding kernel and its desktop/apps
+bootloader/    legacy Limine configuration
+scripts/       legacy kernel build and QEMU drivers
+tools/         legacy image/font/account/QEMU tooling
+assets/        legacy kernel assets
+documentation/ legacy kernel status, limitations and milestone evidence
+build/         legacy kernel build output (ignored)
+```
+
+## Legacy AURELIA kernel
+
+The custom higher-half kernel, Limine BIOS ISO, software compositor, window
+manager and fifteen in-kernel applications remain in the repository as a
+separate research track. It still builds:
+
+```bash
+python scripts/build.py
+python scripts/run.py
+```
+
+The legacy demo login is `aurelia` / `solstice`; it is unrelated to the
+installed Ubuntu user's password. The legacy documents — including its ring-3
+test, paging work and BIOS-only limitations — are in
+[`documentation/STATUS.md`](documentation/STATUS.md),
+[`documentation/LIMITATIONS.md`](documentation/LIMITATIONS.md) and
+[`documentation/MILESTONE-REPORT.md`](documentation/MILESTONE-REPORT.md).
+
+## Design identity
+
+Midnight `#090A0E` · Champagne Gold `#D6B878` · Ivory `#F4F0E7` · Graphite
+`#202127` · Warm Gray `#85838A`. The artwork, AURELIA mark, theme and applets are
+original work, not copies of Windows assets. Ubuntu, KDE, Calamares and Breeze
+remain the property of their upstream projects; AURELIA is not affiliated with
+them.

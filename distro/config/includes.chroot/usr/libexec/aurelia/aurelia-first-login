@@ -1,0 +1,27 @@
+#!/bin/sh
+# Plasma does not automatically apply a LookAndFeel layout just because the
+# package is installed. Apply it once, after the shell is available, then keep
+# the user's subsequent layout changes untouched.
+set -eu
+
+marker="${XDG_CONFIG_HOME:-$HOME/.config}/aurelia-solstice-applied"
+[ -f "$marker" ] && exit 0
+
+apply_tool="$(command -v plasma-apply-lookandfeel || true)"
+[ -n "$apply_tool" ] || exit 0
+
+if command -v qdbus6 >/dev/null 2>&1; then
+    count=0
+    while [ "$count" -lt 30 ]; do
+        if qdbus6 org.kde.plasmashell >/dev/null 2>&1; then
+            break
+        fi
+        sleep 1
+        count=$((count + 1))
+    done
+fi
+
+if "$apply_tool" --apply org.aurelia.solstice >/dev/null 2>&1; then
+    mkdir -p "$(dirname "$marker")"
+    touch "$marker"
+fi

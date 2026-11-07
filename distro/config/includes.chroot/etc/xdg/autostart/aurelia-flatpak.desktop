@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=AURELIA Flatpak Setup
+Comment=Register the Flathub remote when it is not already configured
+Exec=/usr/libexec/aurelia/aurelia-flatpak-setup
+Icon=flatpak
+Terminal=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+OnlyShowIn=KDE;

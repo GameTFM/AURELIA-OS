@@ -1,0 +1,30 @@
+# Runtime support that is intentionally explicit because APT recommends are
+# disabled for the image. Keep this list limited to desktop, hardware, media,
+# archive, portal, power and Secure Boot essentials.
+libgl1-mesa-dri
+mesa-vulkan-drivers
+xserver-xorg-legacy
+xserver-xorg-video-all
+libpam-systemd
+wpasupplicant
+upower
+power-profiles-daemon
+ksystemstats
+kio-fuse
+ksshaskpass
+libkf6kcmutils-bin
+kwin-style-aurorae
+libspa-0.2-bluetooth
+qt6-image-formats-plugins
+btrfs-progs
+unzip
+zip
+bzip2
+7zip
+sound-theme-freedesktop
+libcanberra-pulse
+sonnet6-plugins
+firmware-sof-signed
+thermald
+secureboot-db
+xdg-desktop-portal

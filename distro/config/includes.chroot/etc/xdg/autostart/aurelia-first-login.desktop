@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=AURELIA First Login
+Comment=Apply the AURELIA Solstice layout once for this user
+Exec=/usr/libexec/aurelia/aurelia-first-login
+Icon=aurelia-logo
+Terminal=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+X-KDE-autostart-phase=1
+OnlyShowIn=KDE;

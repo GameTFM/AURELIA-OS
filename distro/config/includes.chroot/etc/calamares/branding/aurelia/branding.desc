@@ -1,0 +1,35 @@
+---
+componentName: aurelia
+
+welcomeStyleCalamares: false
+welcomeExpandingLogo: true
+
+windowExpanding: normal
+windowSize: 1024px,700px
+windowPlacement: center
+
+sidebar: widget
+navigation: widget
+
+strings:
+    productName: "AURELIA OS"
+    shortProductName: "AURELIA"
+    version: "1.0"
+    shortVersion: "1.0"
+    versionedName: "AURELIA OS 1.0 (Solstice)"
+    shortVersionedName: "AURELIA 1.0"
+    bootloaderEntryName: "AURELIA OS"
+    productUrl: "https://github.com/GameTFM/AURELIA-OS"
+    supportUrl: "https://github.com/GameTFM/AURELIA-OS"
+    releaseNotesUrl: "https://github.com/GameTFM/AURELIA-OS/releases"
+
+images:
+    productLogo: "logo.png"
+    productIcon: "logo.png"
+    background: "background.png"
+
+style:
+    SidebarBackground: "#090A0E"
+    SidebarText: "#B4B0BA"
+    SidebarTextCurrent: "#F4F0E7"
+    SidebarBackgroundCurrent: "#202127"

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=AURELIA Solstice
+Comment=AURELIA OS sign-in screen
+Type=Application
+Version=1.0
+
+[Sddm Greeter Theme]
+Name=AURELIA Solstice
+Description=AURELIA OS sign-in screen
+ConfigFile=theme.conf

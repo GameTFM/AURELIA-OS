@@ -1,0 +1,18 @@
+{
+    "KPackageStructure": "Plasma/LookAndFeel",
+    "KPlugin": {
+        "Id": "org.aurelia.solstice",
+        "Name": "AURELIA Solstice",
+        "Description": "Midnight and champagne gold Plasma theme with AURELIA panels, dock and desktop widgets",
+        "Icon": "preferences-desktop-theme-global",
+        "Authors": [
+            {
+                "Name": "AURELIA OS"
+            }
+        ],
+        "Category": "Plasma Look And Feel",
+        "License": "GPL-3.0-or-later",
+        "Version": "1.0.0",
+        "EnabledByDefault": true
+    }
+}

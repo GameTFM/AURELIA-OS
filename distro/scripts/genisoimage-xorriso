@@ -1,0 +1,4 @@
+#!/bin/sh
+# Ubuntu 26.04's stock genisoimage cannot write a >4 GiB squashfs.
+# live-build calls genisoimage; route it through xorriso's compatible mode.
+exec xorriso -as mkisofs -iso-level 3 "$@"
