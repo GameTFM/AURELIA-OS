@@ -5,7 +5,7 @@
 | Check | Status |
 |---|---|
 | Static validator | **PASS** (see [VERIFICATION.md](VERIFICATION.md)) |
-| Ubuntu `resolute` package names | **PASS** (102/102 found in archive indexes) |
+| Ubuntu `resolute` package names | **PASS** (101/101 found in archive indexes) |
 | Original artwork generated | **PASS** (verified dimensions in validator) |
 | legacy AURELIA kernel build | **PASS** (not part of the Ubuntu image) |
 | live-build ISO | **NOT RUN** (no Ubuntu/WSL/Docker build host here) |

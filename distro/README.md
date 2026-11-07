@@ -27,7 +27,7 @@ track; it is no longer the base of the desktop release.
 | Live user | `aurelia`, automatic SDDM login |
 
 Package names were checked against the real `resolute` `main`, `restricted`,
-`universe` and `multiverse` indexes. All **102** package entries exist,
+`universe` and `multiverse` indexes. All **101** package entries exist,
 including the 27 explicit runtime supplements.
 
 ## Lean by design
