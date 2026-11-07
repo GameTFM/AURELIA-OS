@@ -40,6 +40,12 @@ python3 "$ROOT/scripts/generate-artwork.py"
 # GRUB2-specific false failure. Both wrappers are recorded in the log.
 install -m 0755 "$ROOT/scripts/genisoimage-xorriso" /usr/local/bin/genisoimage
 install -m 0755 "$ROOT/scripts/isohybrid-stub" /usr/local/bin/isohybrid
+# live-build's legacy binary helper can run with a PATH that omits
+# /usr/local/bin. Install the same harmless stub on the standard binary path
+# and make the path explicit for the helper's own subshells.
+install -m 0755 "$ROOT/scripts/isohybrid-stub" /usr/bin/isohybrid
+export PATH="/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin${PATH:+:$PATH}"
+command -v isohybrid >/dev/null 2>&1 || { echo "isohybrid compatibility stub is not on PATH" >&2; exit 1; }
 
 mkdir -p "$ROOT/build"
 exec > >(tee -a "$ROOT/build/live-build.log") 2>&1
