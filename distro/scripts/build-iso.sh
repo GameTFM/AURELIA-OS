@@ -45,60 +45,94 @@ echo "== building ISO =="
 # noauto skips the auto/build hook; this script is the build driver.
 lb build noauto
 
-# --- BIOS + UEFI hybrid assembly -------------------------------------------
-# Ubuntu 26.04 ships live-build 3.0~a57. Its GRUB2 path writes genisoimage and
-# isohybrid calls into a script that runs inside the chroot, but the chroot has
-# no isohybrid, and it never writes an EFI El Torito entry at all. The profile
-# therefore asks live-build for a plain ISO and we assemble the real hybrid
-# image here from the finished binary tree.
-PLAIN="$ROOT/live-image-amd64.iso"
-ISO="$ROOT/live-image-amd64.hybrid.iso"
-TREE="$ROOT/binary"
-
-if [ ! -f "$PLAIN" ] && [ -f "$ISO" ]; then
-    PLAIN="$ISO"
-fi
-if [ ! -f "$PLAIN" ]; then
-    echo "live-build completed but no ISO was produced at $PLAIN." >&2
+# --- BIOS + UEFI boot images -----------------------------------------------
+# Ubuntu 26.04 ships live-build 3.0~a57, whose GRUB2 helpers predate GRUB
+# 2.14: its grub-mkimage call omits -p and fails, leaving a 2 KiB El Torito
+# image with no core.img, and it never creates an EFI image at all. Rebuild
+# both boot images against the GRUB actually installed on this host, then
+# assemble the hybrid ISO from live-build's finished binary tree.
+PLAIN=""
+for candidate in \
+    "$ROOT/live-image-amd64.iso" \
+    "$ROOT/binary.iso" \
+    "$ROOT/chroot/binary.iso" \
+    "$ROOT/live-image-amd64.hybrid.iso" \
+    "$ROOT/binary.hybrid.iso"; do
+    if [ -f "$candidate" ]; then
+        PLAIN="$candidate"
+        break
+    fi
+done
+if [ -z "$PLAIN" ]; then
+    echo "live-build completed but produced no ISO." >&2
     exit 1
 fi
+echo "live-build ISO: $PLAIN"
 
+TREE="$ROOT/binary"
+ISO="$ROOT/live-image-amd64.hybrid.iso"
+GRUB_BIOS="/usr/lib/grub/i386-pc"
+GRUB_EFI="/usr/lib/grub/x86_64-efi"
+BIOS_READY=0
 EFI_READY=0
-EFI_IMG="$TREE/boot/grub/efi.img"
-EFI_CFG="$ROOT/build/efi-grub.cfg"
-cat > "$EFI_CFG" <<'EOF'
+
+if [ -d "$TREE/boot/grub" ] && [ -f "$TREE/boot/grub/grub.cfg" ]; then
+    WORK="$(mktemp -d)"
+    EFI_CFG="$WORK/efi-grub.cfg"
+    cat > "$EFI_CFG" <<'EOF'
 search --no-floppy --set=root --file /casper/vmlinuz
 configfile /boot/grub/grub.cfg
 EOF
 
-if [ -f "$TREE/boot/grub/grub.cfg" ] \
-    && command -v grub-mkstandalone >/dev/null 2>&1 \
-    && command -v mkfs.vfat >/dev/null 2>&1 \
-    && command -v mmd >/dev/null 2>&1 \
-    && command -v mcopy >/dev/null 2>&1; then
-    EFI_WORK="$(mktemp -d)"
-    rm -f "$EFI_IMG"
-    dd if=/dev/zero of="$EFI_IMG" bs=1M count=64 status=none
-    if mkfs.vfat -F 32 -n AURELIA_EFI "$EFI_IMG" >/dev/null 2>&1 \
-        && grub-mkstandalone --format=x86_64-efi --output="$EFI_WORK/BOOTX64.EFI" \
-            "boot/grub/grub.cfg=$EFI_CFG" >/dev/null 2>&1 \
-        && mmd -i "$EFI_IMG" ::/EFI ::/EFI/BOOT >/dev/null 2>&1 \
-        && mcopy -i "$EFI_IMG" "$EFI_WORK/BOOTX64.EFI" ::/EFI/BOOT/BOOTX64.EFI >/dev/null 2>&1; then
-        EFI_READY=1
-        echo "EFI system image: $(du -h "$EFI_IMG" | cut -f1)"
+    # BIOS El Torito: cdboot.img + a core.img whose prefix matches the ISO.
+    if [ -f "$GRUB_BIOS/cdboot.img" ] && command -v grub-mkimage >/dev/null 2>&1; then
+        if grub-mkimage -O i386-pc -d "$GRUB_BIOS" -p /boot/grub \
+            -o "$WORK/core.img" \
+            biosdisk iso9660 part_msdos part_gpt fat normal configfile linux \
+            search search_fs_file search_fs_uuid search_label echo test \
+            all_video gfxterm font keystatus \
+            && cat "$GRUB_BIOS/cdboot.img" "$WORK/core.img" > "$TREE/boot/grub/grub_eltorito"; then
+            BIOS_READY=1
+            echo "BIOS El Torito image: $(du -h "$TREE/boot/grub/grub_eltorito" | cut -f1)"
+        else
+            echo "W: BIOS boot image could not be rebuilt." >&2
+        fi
     else
-        echo "W: EFI system image could not be built; keeping BIOS-only boot." >&2
-        rm -f "$EFI_IMG"
+        echo "W: grub-pc-bin/cdboot.img missing; cannot rebuild BIOS boot." >&2
     fi
-    rm -rf "$EFI_WORK"
+
+    # UEFI: a standalone GRUB that finds the ISO's grub.cfg.
+    EFI_IMG="$TREE/boot/grub/efi.img"
+    if command -v grub-mkstandalone >/dev/null 2>&1 \
+        && [ -d "$GRUB_EFI" ] \
+        && command -v mkfs.vfat >/dev/null 2>&1 \
+        && command -v mmd >/dev/null 2>&1 \
+        && command -v mcopy >/dev/null 2>&1; then
+        rm -f "$EFI_IMG"
+        dd if=/dev/zero of="$EFI_IMG" bs=1M count=64 status=none
+        if mkfs.vfat -F 32 -n AURELIA_EFI "$EFI_IMG" >/dev/null 2>&1 \
+            && grub-mkstandalone --format=x86_64-efi --output="$WORK/BOOTX64.EFI" \
+                "boot/grub/grub.cfg=$EFI_CFG" >/dev/null 2>&1 \
+            && mmd -i "$EFI_IMG" ::/EFI ::/EFI/BOOT >/dev/null 2>&1 \
+            && mcopy -i "$EFI_IMG" "$WORK/BOOTX64.EFI" ::/EFI/BOOT/BOOTX64.EFI >/dev/null 2>&1; then
+            EFI_READY=1
+            echo "EFI system image: $(du -h "$EFI_IMG" | cut -f1)"
+        else
+            echo "W: EFI system image could not be built." >&2
+            rm -f "$EFI_IMG"
+        fi
+    else
+        echo "W: EFI tooling missing; cannot build the UEFI image." >&2
+    fi
+    rm -rf "$WORK"
 else
-    echo "W: EFI tooling or GRUB config missing; keeping BIOS-only boot." >&2
+    echo "W: $TREE/boot/grub is missing; cannot rebuild boot images." >&2
 fi
 
 HYBRID=0
-if [ "$EFI_READY" = 1 ] \
-    && command -v xorriso >/dev/null 2>&1 \
-    && [ -f /usr/lib/grub/i386-pc/boot_hybrid.img ]; then
+if [ "$BIOS_READY" = 1 ] && [ "$EFI_READY" = 1 ] \
+    && [ -f "$GRUB_BIOS/boot_hybrid.img" ] \
+    && command -v xorriso >/dev/null 2>&1; then
     rm -f "$ISO"
     if xorriso -as mkisofs \
         -iso-level 3 -full-iso9660-filenames -J -joliet-long -l -r \
@@ -106,7 +140,7 @@ if [ "$EFI_READY" = 1 ] \
         -A "AURELIA OS 1.0" \
         -p "AURELIA live-build" \
         -publisher "AURELIA OS Project" \
-        -isohybrid-mbr /usr/lib/grub/i386-pc/boot_hybrid.img \
+        -isohybrid-mbr "$GRUB_BIOS/boot_hybrid.img" \
         -b boot/grub/grub_eltorito -no-emul-boot -boot-load-size 4 \
         -boot-info-table --grub2-boot-info \
         -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot \
@@ -115,14 +149,16 @@ if [ "$EFI_READY" = 1 ] \
         HYBRID=1
         echo "Assembled hybrid BIOS+UEFI ISO."
     else
-        echo "W: hybrid assembly failed; falling back to the classic ISO." >&2
+        echo "W: hybrid assembly failed." >&2
         rm -f "$ISO"
     fi
+else
+    echo "W: a boot image is missing; skipping hybrid assembly." >&2
 fi
 
 if [ "$HYBRID" != 1 ]; then
     cp -f "$PLAIN" "$ISO"
-    echo "W: shipping the plain El Torito ISO (BIOS boot only)." >&2
+    echo "W: shipping live-build's ISO unchanged; it may not boot." >&2
 fi
 
 sha256sum "$ISO" | tee "$ISO.sha256"
