@@ -48,7 +48,8 @@ echo "== AURELIA live-build configuration =="
 bash ./auto/config
 
 echo "== building ISO =="
-lb build
+# noauto skips the auto/build hook; this script is the build driver.
+lb build noauto
 
 ISO="$ROOT/live-image-amd64.hybrid.iso"
 if [ ! -f "$ISO" ] && [ -f "$ROOT/binary.hybrid.iso" ]; then

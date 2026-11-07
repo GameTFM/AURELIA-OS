@@ -1,4 +1,4 @@
 #!/bin/sh
-# Invoked by lb build. Keep this hook side-effect free; build-iso.sh starts
-# the actual build with lb build directly.
+# Invoked by a plain lb build. Keep this hook side-effect free; build-iso.sh
+# starts the actual pipeline with lb build noauto.
 set -eu

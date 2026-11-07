@@ -1,6 +1,6 @@
 #!/bin/sh
 # AURELIA OS live-build configuration.
-# Run this through live-build (auto/build) on Ubuntu 26.04, not on Windows.
+# Run this through build-iso.sh (lb config noauto) on Ubuntu 26.04, not Windows.
 set -eu
 
 lb config noauto \
