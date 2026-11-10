@@ -36,12 +36,14 @@ legacy research track. They are not the base of the current distribution.
 
 ## Latest verified build
 
-Build 11 (`7456f31f36223ea59e49bf4797399de7e6ec10497a5e6a0437e9203911d1dff5`,
-2,473,328,640 bytes) boots to the AURELIA Plasma desktop with working wired
-networking and DNS, and no KDE Welcome window. NOVAIR still fails to start on a
-machine without a DRM render node; its XWayland fallback is in build 12 and is
-not yet verified. The release below still points at the previously published
-image. See `PROJECT_STATUS.md` for the measured state.
+Build 12 (`0988eaaa7e02271a1d4980910ead9887b2708fa539cab97fbd00ccca2691bb23`,
+2,473,328,640 bytes) has a verified 24/24 payload, boots to the AURELIA Plasma
+session with wired networking and DNS, and shows no KDE Welcome window. The
+installer configuration is corrected and checked, but no disk installation has
+been run. Two regressions remain open: NOVAIR's window does not appear without a
+DRM render node, and the top panel/dock are missing from the build-12 desktop.
+The release below still points at the previously published image. See
+`PROJECT_STATUS.md` for the measured state.
 
 ## Get the image
 

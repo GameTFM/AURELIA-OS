@@ -1,41 +1,39 @@
 # Known issues
 
-Status as of build 11; build 12 is building the installer corrections and the
-NOVAIR XWayland fallback.
+Status as of build 12 (2026-11-10).
 
 ## Open
 
-1. **NOVAIR does not start on a machine without a DRM render node.** Build 11
-   measured `libEGL warning: egl: failed to create dri2 screen` four times, then
-   `The Wayland connection broke. Did the Wayland compositor die?` and exit 255,
-   with KWin and plasmashell still running. The launcher now switches to XWayland
-   (Mesa llvmpipe) in that case; the fix is in build 12 and is not yet verified.
-2. **Installer path untested.** Calamares is configured and corrected (branding
-   search path, no autologin, live account removed, GRUB config generated), but no
-   installation to a disk has been run and no installed system has been booted.
-   Build 12 needs an install test against a spare virtual disk.
-3. **UEFI desktop unconfirmed.** UEFI reaches the live GRUB entry and the splash;
-   the desktop under OVMF has not been observed.
-4. **Wi-Fi untested.** NetworkManager and `plasma-nm` are installed; only
-   emulated wired Ethernet has been exercised.
-5. **Audio, suspend, external displays, touchpad, webcam untested.** No physical
-   hardware has been used yet.
-6. **AI needs a provider.** No key is shipped; no provider has been exercised end
-   to end from the desktop.
+1. **NOVAIR shows no window on a machine without a DRM render node.** Build 12's
+   XWayland fallback stopped the crash: the process stayed alive for 45 s, printed
+   four `libEGL warning: egl: failed to create dri2 screen` lines, and never
+   reported `The Wayland connection broke`. But no browser window appeared in
+   either screenshot. The browser is still not usable there.
+2. **Desktop panel and dock are missing at capture time.** Build 12 boots to the
+   Solstice calendar and clock with a black background but no top panel or dock
+   in two screenshots taken ~4 minutes apart. Build 10's screenshot with panel
+   and dock was captured much later in that session, so this may be look-and-feel
+   apply timing rather than a regression. Confirm with a late capture and, if it
+   persists, inspect `~/.config/plasma-org.kde.plasma.desktop-appletsrc` and
+   plasmashell startup.
+3. **Installer path untested.** Calamares configuration is corrected and the
+   payload verifier checks it, but no installation to a disk has been run and no
+   installed system has been booted.
+4. **UEFI desktop unconfirmed.** UEFI reaches the live GRUB entry and the splash.
+5. **Wi-Fi, audio, suspend, external displays, touchpad, webcam untested.** No
+   physical hardware has been used.
+6. **AI needs a provider.** No key is shipped; no provider exercised end to end.
 7. **Gaming Mode unproven on real hardware.** No frame numbers are claimed.
-8. **No GPU acceleration in the verification VM.** QEMU exposes `card0` but no
-   `renderD128`, so the session uses Mesa software rendering there.
+8. **No GPU acceleration in the verification VM.** `card0` only, no `renderD128`.
 9. **Backup/restore against a real repository.** Self-test passes; no real
-   external destination has been used.
+   external destination used.
 
 ## Closed
 
-- SDDM start job deleted on every boot (build 10, root cause 7).
-- World-writable systemd unit files (build 10).
 - Live session without a wired link or DNS (build 11).
-- KDE Welcome Center window on the live desktop (build 11).
-- Installer would autologin the installed user and preset a colliding login name
-  (build 12 source).
+- KDE Welcome Center window (build 11).
+- Installer autologin, colliding login-name preset, missing branding path,
+  missing `grubcfg`, live account retained on the target (build 12).
+- SDDM start job deleted on every boot (build 10, root cause 7).
+- World-writable systemd units (build 10).
 - Empty serial log after the GRUB rewrite (build 9).
-- SDDM conflicting with `plymouth-quit-wait.service` (build 9).
-- NOVAIR crash when switching to a loading tab (source fix).

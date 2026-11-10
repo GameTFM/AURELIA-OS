@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-11-10 — build 12 (verified)
+
+- Payload verifier **24/24 PASS**, including the installer checks: branding on
+  Calamares' search path, no installed-user autologin, live account removed from
+  the target, `grubcfg` present.
+- Live session: SDDM active, KWin and plasmashell running, `10.0.2.15/24` with a
+  default route and working DNS, no KDE Welcome window.
+- NOVAIR: the XWayland fallback keeps the process alive (no exit 255, no Wayland
+  disconnect) but **no window appears**; still not a working browser.
+- Desktop: the top panel and dock are missing in both build-12 screenshots
+  (~4 minutes apart). Build 10's panel-and-dock capture was much later in its
+  session, so this is unresolved timing-vs-regression; confirm with a late
+  capture in build 13.
+- `final-build.sh` now syncs `scripts/validate.py`; without it the WSL build ran
+  the previous validator and the first build 12 attempt failed on the old
+  autologin assertion.
+- The CI harness is now tracked in git (`.gitignore` keeps artifacts and logs
+  out while allowing `build/ci/*.sh` and `*.py`).
+
 ## 2026-11-08 — build 11 (verified)
 
 - **Live networking and DNS verified.** `ens3:ethernet:connected`, address

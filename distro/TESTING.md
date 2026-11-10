@@ -15,7 +15,7 @@
 | QEMU BIOS live boot to Plasma | **PASS on build 10** — `sddm` active, `kwin_wayland` + `plasmashell` running, 0 failed units, desktop captured in `build/ci/live10-screen.png` |
 | AURELIA Plymouth splash | **PASS** — the AURELIA theme renders instead of Ubuntu's |
 | NOVAIR window | **PASS** — real Qt WebEngine toolbar, tabs and status bar |
-| NOVAIR navigation | **FAIL on build 11** — still `libEGL … failed to create dri2 screen` then `The Wayland connection broke`, exit 255; XWayland fallback in build 12, unverified |
+| NOVAIR navigation | **FAIL on build 12** — XWayland fallback stops the crash (process alive, no Wayland disconnect) but no window appears; EGL warnings persist |
 | Live networking / DNS | **PASS on build 11** — `ens3:ethernet:connected`, `10.0.2.15/24`, default via `10.0.2.2`, `example.com` resolved via `systemd-resolved` |
 | KWin stability without a GPU | **PASS on build 10** — `kwin_wayland` stayed up with no `/dev/dri/renderD128`; the Plasma session used the software-GL fallback |
 | QEMU UEFI live desktop | **NOT CONFIRMED** — reaches GRUB and the graphical splash |
