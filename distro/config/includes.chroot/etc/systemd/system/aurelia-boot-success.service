@@ -1,0 +1,11 @@
+[Unit]
+Description=AURELIA mark a successful graphical boot
+ConditionPathExists=/var/lib/aurelia/boot-attempts
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'rm -f /var/lib/aurelia/boot-attempts'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=graphical.target

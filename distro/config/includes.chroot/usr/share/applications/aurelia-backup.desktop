@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Backup & Restore
+GenericName=Protect and recover your files
+Comment=Create encrypted incremental backups, restore snapshots and import Windows backups
+Exec=aurelia-backup
+TryExec=aurelia-backup
+Icon=aurelia-logo
+Terminal=false
+StartupNotify=true
+Categories=System;Utility;Archiving;
+Keywords=backup;restore;snapshot;restic;windows;recovery;aurelia;

@@ -1,0 +1,5 @@
+// AURELIA protects system configuration during package updates. If a
+// transaction is interrupted, /var/lib/aurelia/update-in-progress remains and
+// the recovery environment reports it. User home data is never modified here.
+DPkg::Pre-Invoke { "/usr/libexec/aurelia/aurelia-update-guard"; };
+DPkg::Post-Invoke { "/usr/libexec/aurelia/aurelia-update-guard --complete"; };

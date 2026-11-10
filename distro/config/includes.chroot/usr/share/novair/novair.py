@@ -258,6 +258,18 @@ def human_bytes(value: int) -> str:
     return f"{value:.1f} GB"
 
 
+def unique_download_path(directory: Path, name: str) -> Path:
+    """Return a non-existing path without silently overwriting a download."""
+    safe_name = Path(name or "download").name
+    candidate = directory / safe_name
+    stem, suffix = Path(safe_name).stem, Path(safe_name).suffix
+    counter = 1
+    while candidate.exists():
+        candidate = directory / f"{stem} ({counter}){suffix}"
+        counter += 1
+    return candidate
+
+
 def new_tab_html(settings: dict, store: Store) -> str:
     engine = settings.get("search_engine", "DuckDuckGo")
     action, field = SEARCH_ENGINES.get(engine, SEARCH_ENGINES["DuckDuckGo"])
@@ -708,6 +720,9 @@ class BrowserTab(QWebEngineView):
         self.window_ref = window
         self.private = private
         self._new_tab = True
+        # Latest loadProgress value. The Qt signal cannot be read back, so the
+        # window keeps this instead of calling tab.loadProgress().
+        self.progress_value = 100
         page = BrowserPage(window.profile_for(private), self)
         self.setPage(page)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -757,6 +772,7 @@ class BrowserTab(QWebEngineView):
         self.window_ref.tab_icon_changed(self, icon)
 
     def _load_progress(self, value: int) -> None:
+        self.progress_value = value
         self.window_ref.tab_progress_changed(self, value)
 
     def _load_finished(self, ok: bool) -> None:
@@ -811,6 +827,7 @@ class MainWindow(QMainWindow):
         self._private_profile: Optional[QWebEngineProfile] = None
         self._downloads: Optional[DownloadsDialog] = None
         self._handled_downloads: set[int] = set()
+        self._download_profiles: set[int] = set()
         self._was_maximized = False
         self.private_windows: list["MainWindow"] = []
         self.setWindowTitle("NOVAIR" + (" Private" if private else ""))
@@ -819,7 +836,6 @@ class MainWindow(QMainWindow):
             self.setWindowIcon(QIcon(ICON_PATH))
         self.setStyleSheet(stylesheet(self.settings.get("theme", "midnight")))
         self.profile = self.profile_for(private)
-        self.profile.downloadRequested.connect(self.handle_download)
         self._install_tracker_for(self.profile)
         self._build_actions()
         self._build_toolbar()
@@ -844,10 +860,17 @@ class MainWindow(QMainWindow):
 
     def profile_for(self, private: bool) -> QWebEngineProfile:
         if not private:
-            return QWebEngineProfile.defaultProfile()
-        if self._private_profile is None:
+            profile = QWebEngineProfile.defaultProfile()
+        elif self._private_profile is None:
             self._private_profile = QWebEngineProfile(self)
-        return self._private_profile
+            profile = self._private_profile
+        else:
+            profile = self._private_profile
+        profile_key = id(profile)
+        if profile_key not in self._download_profiles:
+            profile.downloadRequested.connect(self.handle_download)
+            self._download_profiles.add(profile_key)
+        return profile
 
     def _make_action(
         self,
@@ -1051,8 +1074,12 @@ class MainWindow(QMainWindow):
             + (f" — {tab.title()}" if tab.title() else "")
         )
         self._update_star(tab)
-        self.progress.setVisible(0 < tab.loadProgress() < 100)
-        self.progress.setValue(tab.loadProgress())
+        # QWebEngineView.loadProgress is a Qt signal, not a getter. Calling it
+        # raised "TypeError: native Qt signal is not callable" and aborted the
+        # switch to the tab. BrowserTab caches the latest value instead.
+        value = getattr(tab, "progress_value", 100)
+        self.progress.setVisible(0 < value < 100)
+        self.progress.setValue(value)
 
     def navigate_address(self) -> None:
         text = self.address.text().strip()
@@ -1217,13 +1244,7 @@ class MainWindow(QMainWindow):
         self._handled_downloads.add(key)
         downloads = Path.home() / "Downloads"
         downloads.mkdir(parents=True, exist_ok=True)
-        name = Path(download.downloadFileName() or "download").name
-        candidate = downloads / name
-        counter = 1
-        while candidate.exists():
-            stem, suffix = Path(name).stem, Path(name).suffix
-            candidate = downloads / f"{stem} ({counter}){suffix}"
-            counter += 1
+        candidate = unique_download_path(downloads, download.downloadFileName() or "download")
         download.setDownloadDirectory(str(downloads))
         download.setDownloadFileName(candidate.name)
         download.accept()
@@ -1306,6 +1327,16 @@ class MainWindow(QMainWindow):
         )
 
 
+class _EmptyStore:
+    """Minimal store used by the headless self-test."""
+
+    def bookmarks(self):
+        return []
+
+    def recent(self, _limit: int = 8):
+        return []
+
+
 def _get_text(parent: QWidget, title: str, label: str) -> tuple[str, bool]:
     dialog = QDialog(parent)
     dialog.setWindowTitle(title)
@@ -1340,8 +1371,17 @@ def main(argv: Optional[list[str]] = None) -> int:
         print(f"NOVAIR {APP_VERSION}")
         return 0
     if args.self_test:
-        print("NOVAIR self-test: Qt WebEngine bindings import OK")
-        return 0
+        checks = [
+            ("Qt WebEngine bindings import", True),
+            ("search URL", search_url(DEFAULT_SETTINGS, "aurelia os").toString().startswith("https://duckduckgo.com/?q=")),
+            ("address detection", is_address("example.com") and not is_address("not an address")),
+            ("new-tab HTML", "NOVAIR" in new_tab_html(DEFAULT_SETTINGS, _EmptyStore())),
+            ("safe download names", unique_download_path(Path("/tmp"), "../../file.zip").name == "file.zip"),
+        ]
+        failed = [label for label, ok in checks if not ok]
+        for label, ok in checks:
+            print(f"NOVAIR self-test {label}: {'PASS' if ok else 'FAIL'}")
+        return 1 if failed else 0
 
     QApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts, True)
     app = QApplication([sys.argv[0]])

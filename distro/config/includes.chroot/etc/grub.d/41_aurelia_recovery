@@ -1,0 +1,42 @@
+#!/bin/sh
+# AURELIA recovery and Safe Mode entries. Uses the installed kernel and the
+# real filesystem UUIDs at grub-mkconfig time; no device names are hardcoded.
+set -e
+
+GRUB_PROBE="${GRUB_PROBE:-grub-probe}"
+[ -x "$(command -v "$GRUB_PROBE" 2>/dev/null || true)" ] || exit 0
+
+ROOT_UUID="$("$GRUB_PROBE" --target=fs_uuid / 2>/dev/null || true)"
+BOOT_UUID="$("$GRUB_PROBE" --target=fs_uuid /boot 2>/dev/null || true)"
+KERNEL="$(ls -1 /boot/vmlinuz-* 2>/dev/null | sort -V | tail -n1 || true)"
+[ -n "$ROOT_UUID" ] && [ -n "$KERNEL" ] || exit 0
+KVER="${KERNEL##*/vmlinuz-}"
+INITRD="/boot/initrd.img-$KVER"
+[ -f "$KERNEL" ] && [ -f "$INITRD" ] || exit 0
+
+if [ -n "$BOOT_UUID" ] && [ "$BOOT_UUID" != "$ROOT_UUID" ]; then
+    SEARCH_UUID="$BOOT_UUID"
+    PREFIX=""
+else
+    SEARCH_UUID="$ROOT_UUID"
+    PREFIX="/boot"
+fi
+
+cat <<EOF
+menuentry 'AURELIA Recovery' --id aurelia-recovery --class aurelia --class recovery {
+    load_video
+    insmod gzio
+    search --no-floppy --fs-uuid --set=root $SEARCH_UUID
+    echo 'Loading AURELIA recovery environment…'
+    linux $PREFIX/vmlinuz-$KVER root=UUID=$ROOT_UUID ro quiet systemd.unit=multi-user.target systemd.mask=sddm.service aurelia.recovery=1
+    initrd $PREFIX/initrd.img-$KVER
+}
+menuentry 'AURELIA Safe Mode' --id aurelia-safe --class aurelia --class recovery {
+    load_video
+    insmod gzio
+    search --no-floppy --fs-uuid --set=root $SEARCH_UUID
+    echo 'Loading AURELIA Safe Mode…'
+    linux $PREFIX/vmlinuz-$KVER root=UUID=$ROOT_UUID ro quiet nomodeset systemd.unit=multi-user.target aurelia.safe=1
+    initrd $PREFIX/initrd.img-$KVER
+}
+EOF

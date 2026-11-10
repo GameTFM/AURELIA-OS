@@ -2,4 +2,28 @@
 # NOVAIR launcher. The Python application lives in the system data directory
 # so distribution packaging and static validation can inspect the real source.
 set -eu
+
+# Qt WebEngine requires a usable graphics context. On machines without a DRM
+# render node (VMs, some remote sessions) Qt aborts with
+#   libEGL warning: egl: failed to create dri2 screen
+# and the browser exits before it paints a window. Plasma's own session gets the
+# fallback from /etc/xdg/plasma-workspace/env/10-aurelia-software-gl.sh, but a
+# browser launched from a terminal, the dock or an autostart file does not
+# inherit that, so the launcher applies the same real software path itself. A
+# machine with a render node keeps hardware acceleration untouched.
+if [ ! -e /dev/dri/renderD128 ]; then
+    export LIBGL_ALWAYS_SOFTWARE=1
+    export QT_QUICK_BACKEND=software
+    export QT_OPENGL=software
+    export QTWEBENGINE_CHROMIUM_FLAGS="${QTWEBENGINE_CHROMIUM_FLAGS:---disable-gpu --enable-unsafe-swiftshader --disable-dev-shm-usage}"
+    # Qt's native Wayland EGL path needs a GBM/render node even when Mesa is
+    # told to render in software; it still prints "egl: failed to create dri2
+    # screen" and the browser exits. XWayland, which KWin starts in the Plasma
+    # session, reaches the same Mesa llvmpipe through GLX, so use it when a
+    # display is available. Verified in the next live boot, not yet in an ISO.
+    if [ -n "${DISPLAY:-}" ]; then
+        export QT_QPA_PLATFORM=xcb
+    fi
+fi
+
 exec python3 /usr/share/novair/novair.py "$@"

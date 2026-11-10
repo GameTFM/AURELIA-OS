@@ -1,0 +1,186 @@
+#!/bin/sh
+# AURELIA Recovery Environment on tty1.
+# All operations are real; nothing is formatted. User data is never deleted.
+set -u
+export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+LOG=/var/log/aurelia-recovery.log
+
+mkdir -p /var/log /var/lib/aurelia
+printf '\n===== AURELIA recovery %s =====\n' "$(date -Is)" >> "$LOG"
+rm -f /var/lib/aurelia/boot-attempts
+clear 2>/dev/null || true
+
+say() {
+    printf '%s\n' "$*"
+    printf '%s\n' "$*" >> "$LOG"
+}
+
+pause() {
+    printf '\nPress Enter to return to the recovery menu…'
+    read -r _ || true
+}
+
+header() {
+    clear 2>/dev/null || true
+    cat <<'EOF'
+  AURELIA RECOVERY
+  ────────────────────────────────────────────────
+  This environment does not delete or format your files.
+  Use it to repair startup, verify storage, or restore a backup.
+EOF
+    printf '\n'
+    if [ -f /var/lib/aurelia/update-in-progress ]; then
+        printf '  NOTICE: an interrupted package update was recorded at %s.\n' "$(cat /var/lib/aurelia/update-in-progress)"
+        printf '  Use option 2 to finish configuring packages before restarting.\n\n'
+    fi
+}
+
+main_menu() {
+    header
+    cat <<'EOF'
+  1) Schedule a full filesystem check at next boot
+  2) Repair packages, initramfs and the boot configuration
+  3) Restore an AURELIA restic backup
+  4) Reinstall / repair the GRUB bootloader
+  5) Explain Safe Mode
+  6) Open a root shell
+  7) Reboot
+  8) Shut down
+  q) Exit recovery
+EOF
+    printf '\nChoose an option: '
+}
+
+schedule_fsck() {
+    header
+    say "Scheduling a full filesystem check. systemd-fsck will run it before / is mounted at the next boot."
+    touch /forcefsck
+    say "Done: /forcefsck exists. Restart when ready."
+    pause
+}
+
+repair_system() {
+    header
+    say "Configuring unfinished packages, repairing dependencies and regenerating boot files…"
+    dpkg --configure -a 2>&1 | tee -a "$LOG"
+    apt-get -f install -y 2>&1 | tee -a "$LOG"
+    update-initramfs -u -k all 2>&1 | tee -a "$LOG"
+    update-grub 2>&1 | tee -a "$LOG"
+    say "Package, initramfs and GRUB repair finished. Review the output above for errors."
+    pause
+}
+
+restore_backup() {
+    header
+    if ! command -v restic >/dev/null 2>&1; then
+        say "restic is not installed in this recovery image."
+        pause
+        return
+    fi
+    printf 'Backup repository (local path or restic URL): '
+    read -r repository || true
+    [ -n "${repository:-}" ] || return
+    printf 'Repository password (input is hidden): '
+    stty -echo 2>/dev/null || true
+    read -r password || true
+    stty echo 2>/dev/null || true
+    printf '\n'
+    export RESTIC_PASSWORD="$password"
+    if ! restic -r "$repository" snapshots; then
+        say "Could not open the repository. Check the path and password."
+        unset RESTIC_PASSWORD
+        pause
+        return
+    fi
+    printf '\nSnapshot ID to restore (or "latest"): '
+    read -r snapshot || true
+    [ -n "${snapshot:-}" ] || { unset RESTIC_PASSWORD; return; }
+    printf 'Restore into which empty folder: '
+    read -r target || true
+    [ -n "${target:-}" ] || { unset RESTIC_PASSWORD; return; }
+    mkdir -p "$target"
+    if [ -n "$(ls -A "$target" 2>/dev/null)" ]; then
+        say "The destination is not empty. AURELIA will not overwrite existing data."
+        unset RESTIC_PASSWORD
+        pause
+        return
+    fi
+    printf 'Type RESTORE to confirm restoring snapshot %s into %s: ' "$snapshot" "$target"
+    read -r confirmation || true
+    if [ "$confirmation" = "RESTORE" ]; then
+        restic -r "$repository" restore "$snapshot" --target "$target" --verify 2>&1 | tee -a "$LOG"
+        say "Restore finished. Verify the restored files before moving them into your home."
+    else
+        say "Restore cancelled; no files were changed."
+    fi
+    unset RESTIC_PASSWORD
+    pause
+}
+
+repair_bootloader() {
+    header
+    root_source="$(findmnt -n -o SOURCE / 2>/dev/null || true)"
+    say "Root device: ${root_source:-unknown}"
+    printf 'Type BOOTLOADER to reinstall GRUB on this system: '
+    read -r confirmation || true
+    [ "$confirmation" = "BOOTLOADER" ] || { say "Cancelled."; pause; return; }
+    if [ -d /sys/firmware/efi ]; then
+        if [ ! -d /boot/efi ]; then
+            say "EFI is active but /boot/efi is not mounted. Mount the EFI system partition first."
+            pause
+            return
+        fi
+        grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=AURELIA --recheck 2>&1 | tee -a "$LOG"
+    else
+        disk="$(lsblk -no PKNAME "$root_source" 2>/dev/null | head -n1 || true)"
+        if [ -z "$disk" ]; then
+            printf 'Root disk (for example /dev/sda): '
+            read -r disk || true
+        else
+            disk="/dev/$disk"
+        fi
+        [ -n "$disk" ] || { say "No disk selected."; pause; return; }
+        printf 'Reinstall GRUB to %s? Type YES: ' "$disk"
+        read -r disk_confirm || true
+        [ "$disk_confirm" = "YES" ] || { say "Cancelled."; pause; return; }
+        grub-install --recheck "$disk" 2>&1 | tee -a "$LOG"
+    fi
+    update-grub 2>&1 | tee -a "$LOG"
+    say "Bootloader repair finished. Review the output above."
+    pause
+}
+
+safe_mode_help() {
+    header
+    cat <<'EOF'
+  Safe Mode is a separate GRUB entry. It starts the multi-user system with
+  nomodeset, so the graphical driver is not loaded. Use it when the desktop
+  cannot start. Log in on the text console, then repair the system with:
+
+      sudo apt-get update
+      sudo apt-get -f install
+      sudo update-initramfs -u
+      sudo update-grub
+
+  The AURELIA Recovery entry is available from the same GRUB menu and includes
+  this repair menu. Recovery and Safe Mode never format a disk automatically.
+EOF
+    pause
+}
+
+while true; do
+    main_menu
+    read -r choice || choice=q
+    case "$choice" in
+        1) schedule_fsck ;;
+        2) repair_system ;;
+        3) restore_backup ;;
+        4) repair_bootloader ;;
+        5) safe_mode_help ;;
+        6) clear 2>/dev/null || true; say "Type exit to return to recovery."; /bin/bash; pause ;;
+        7) say "Rebooting…"; reboot ;;
+        8) say "Shutting down…"; poweroff ;;
+        q|Q) exit 0 ;;
+        *) say "Unknown option."; sleep 1 ;;
+    esac
+done

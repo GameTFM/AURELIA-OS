@@ -1,0 +1,32 @@
+[Unit]
+Description=AURELIA Recovery Environment
+Documentation=file:/usr/libexec/aurelia/aurelia-recovery
+# This unit is wanted by multi-user.target, so it is part of every boot
+# transaction, and it is gated by the kernel command line. It must not carry
+# Conflicts=display-manager.service: systemd resolves conflicts while building
+# the transaction, before conditions are evaluated. That conflict therefore
+# added a stop job for the display manager on every normal boot and made
+# systemd delete SDDM's start job ("Fixing conflicting jobs
+# sddm.service/start,sddm.service/stop by deleting job sddm.service/start"),
+# which is why graphical.target became active with no desktop. The recovery
+# GRUB entry masks sddm for that boot instead, and ExecStartPre below stops it
+# if recovery is started manually from a running desktop.
+ConditionKernelCommandLine=aurelia.recovery=1
+After=local-fs.target systemd-user-sessions.service
+Before=display-manager.service
+
+[Service]
+Type=idle
+ExecStartPre=-/usr/bin/systemctl --no-block stop display-manager.service
+ExecStart=-/usr/libexec/aurelia/aurelia-recovery
+StandardInput=tty-force
+StandardOutput=tty
+StandardError=tty
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target

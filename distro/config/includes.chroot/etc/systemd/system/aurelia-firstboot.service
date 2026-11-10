@@ -1,0 +1,13 @@
+[Unit]
+Description=AURELIA first-boot detection
+Documentation=man:sddm(1)
+After=local-fs.target systemd-user-sessions.service
+Before=display-manager.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/aurelia/aurelia-firstboot-check
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,234 @@
+#!/usr/bin/env python3
+"""Privileged AURELIA OOBE helper.
+
+Invoked through polkit by the setup application. The payload arrives in a
+mode-0600 file, is validated here, and contains the password only for the short
+time needed to hand it to chpasswd over stdin. The helper never prints secrets,
+never accepts a password through argv, and refuses arbitrary account names.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import pwd
+import re
+import shutil
+import socket
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+THEME_DIR = Path("/usr/share/plymouth/themes")
+STATE_DIR = Path("/var/lib/aurelia")
+ACCOUNTS_ICONS = Path("/var/lib/AccountsService/icons")
+FIRSTBOOT_SDDM = Path("/etc/sddm.conf.d/zz-aurelia-firstboot.conf")
+AUTOLOGIN_DROPINS = (
+    FIRSTBOOT_SDDM,
+    Path("/etc/sddm.conf.d/autologin.conf"),
+    Path("/etc/sddm.conf.d/10-autologin.conf"),
+)
+VALID_NAME = re.compile(r"^[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?$")
+VALID_LOGIN = re.compile(r"^[a-z_][a-z0-9_-]{2,31}$")
+
+
+def command(arguments: list[str], input_text: str | None = None, timeout: int = 60) -> tuple[int, str]:
+    try:
+        result = subprocess.run(arguments, input=input_text, capture_output=True, text=True,
+                                timeout=timeout, check=False)
+        return result.returncode, (result.stderr or result.stdout or "").strip()
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return 1, str(exc)
+
+
+def fail(errors: list[str], operation: str, detail: str) -> None:
+    errors.append(f"{operation}: {detail}")
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--payload", required=True)
+    args = parser.parse_args(argv)
+    if os.geteuid() != 0:
+        print(json.dumps({"ok": False, "errors": ["This helper must run as root."]}))
+        return 1
+    payload_path = Path(args.payload)
+    try:
+        data = json.loads(payload_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        print(json.dumps({"ok": False, "errors": [f"Could not read the setup payload: {exc}"]}))
+        return 1
+    finally:
+        try:
+            payload_path.unlink()
+        except OSError:
+            pass
+
+    errors: list[str] = []
+    operations: list[str] = []
+    username = str(data.get("user", ""))
+    try:
+        entry = pwd.getpwnam(username)
+    except KeyError:
+        print(json.dumps({"ok": False, "errors": ["The setup user does not exist."]}))
+        return 1
+    if entry.pw_uid == 0 or entry.pw_uid < 1000:
+        print(json.dumps({"ok": False, "errors": ["The setup user is not a regular local account."]}))
+        return 1
+
+    full_name = str(data.get("full_name", "")).strip()
+    password = str(data.get("password", ""))
+    confirm = str(data.get("password_confirm", ""))
+    if password != confirm or len(password) < 8 or any(ord(char) < 32 for char in password):
+        fail(errors, "Password", "The password was missing, too short, contained control characters or did not match.")
+    else:
+        code, detail = command(["chpasswd"], input_text=f"{username}:{password}\n")
+        if code != 0:
+            fail(errors, "Password", detail)
+        else:
+            operations.append("Password changed and stored as a local system hash.")
+
+    if full_name and len(full_name) <= 120 and not any(ord(char) < 32 for char in full_name):
+        code, detail = command(["usermod", "-c", full_name, username])
+        if code != 0:
+            fail(errors, "Display name", detail)
+        else:
+            operations.append("Account display name updated.")
+    hostname = str(data.get("hostname", "")).strip()
+    if hostname and len(hostname) <= 63 and VALID_NAME.match(hostname):
+        if hostname != socket.gethostname():
+            code, detail = command(["hostnamectl", "set-hostname", hostname])
+            if code != 0:
+                fail(errors, "Computer name", detail)
+            else:
+                operations.append(f"Computer name set to {hostname}.")
+    elif hostname:
+        fail(errors, "Computer name", "The name was not a valid hostname.")
+
+    timezone = str(data.get("timezone", "")).strip()
+    if timezone:
+        if (Path("/usr/share/zoneinfo") / timezone).is_file() and ".." not in timezone:
+            code, detail = command(["timedatectl", "set-timezone", timezone])
+            if code != 0:
+                fail(errors, "Time zone", detail)
+            else:
+                operations.append(f"Time zone set to {timezone}.")
+        else:
+            fail(errors, "Time zone", "Unknown time zone.")
+
+    picture = Path(str(data.get("picture", "")))
+    if picture.is_file() and picture.stat().st_size <= 12 * 1024 * 1024:
+        try:
+            ACCOUNTS_ICONS.mkdir(parents=True, exist_ok=True)
+            target = ACCOUNTS_ICONS / username
+            shutil.copyfile(picture, target)
+            os.chmod(target, 0o644)
+            face = Path(entry.pw_dir) / ".face"
+            shutil.copyfile(picture, face)
+            os.chown(face, entry.pw_uid, entry.pw_gid)
+            os.chmod(face, 0o600)
+            icon = Path(entry.pw_dir) / ".face.icon"
+            if icon.exists() or icon.is_symlink():
+                icon.unlink()
+            try:
+                icon.symlink_to(face)
+                os.lchown(icon, entry.pw_uid, entry.pw_gid)
+            except OSError:
+                shutil.copyfile(picture, icon)
+                os.chown(icon, entry.pw_uid, entry.pw_gid)
+                os.chmod(icon, 0o600)
+            operations.append("Profile picture installed for the account.")
+        except OSError as exc:
+            fail(errors, "Profile picture", str(exc))
+
+    if data.get("recovery_admin"):
+        recovery_name = str(data.get("recovery_name", ""))
+        recovery_password = str(data.get("recovery_password", ""))
+        if not VALID_LOGIN.match(recovery_name) or recovery_name == username:
+            fail(errors, "Recovery account", "The recovery login name was invalid.")
+        elif len(recovery_password) < 8 or any(ord(char) < 32 for char in recovery_password):
+            fail(errors, "Recovery account", "The recovery password was too short or contained control characters.")
+        else:
+            try:
+                pwd.getpwnam(recovery_name)
+                exists = True
+            except KeyError:
+                exists = False
+            if not exists:
+                code, detail = command(["useradd", "-m", "-s", "/bin/bash", "-G", "sudo", recovery_name])
+                if code != 0:
+                    fail(errors, "Recovery account", detail)
+                else:
+                    code, detail = command(["chpasswd"], input_text=f"{recovery_name}:{recovery_password}\n")
+                    if code != 0:
+                        fail(errors, "Recovery password", detail)
+                    else:
+                        operations.append("Second administrator account created for recovery.")
+            else:
+                fail(errors, "Recovery account", "The recovery account already exists; no existing account was changed.")
+
+    theme = str(data.get("theme", "dark"))
+    theme_name = "aurelia-light" if theme == "light" else "aurelia"
+    if (THEME_DIR / theme_name).is_dir():
+        config = Path("/etc/plymouth/plymouthd.conf")
+        try:
+            text = config.read_text(encoding="utf-8") if config.exists() else "[Daemon]\n"
+            if "Theme=" in text:
+                text = re.sub(r"(?m)^Theme=.*$", f"Theme={theme_name}", text)
+            else:
+                text = text.rstrip() + f"\nTheme={theme_name}\n"
+            config.write_text(text, encoding="utf-8")
+            tool = shutil.which("plymouth-set-default-theme")
+            if tool:
+                code, detail = command([tool, "-R", theme_name], timeout=240)
+                if code == 0:
+                    operations.append(f"Boot theme set to {theme_name} and initramfs rebuilt.")
+                else:
+                    operations.append(f"Boot theme config set to {theme_name}; initramfs rebuild reported: {detail}")
+            else:
+                operations.append(f"Boot theme config set to {theme_name}; plymouth-set-default-theme is unavailable.")
+        except OSError as exc:
+            fail(errors, "Boot theme", str(exc))
+
+    if errors:
+        print(json.dumps({"ok": False, "operations": operations, "errors": errors}))
+        return 1
+
+    marker = STATE_DIR / "oobe-complete"
+    try:
+        STATE_DIR.mkdir(parents=True, exist_ok=True)
+        marker.write_text(json.dumps({
+            "completed_at": time.time(), "user": username, "hostname": hostname,
+            "theme": theme, "recovery_admin": bool(data.get("recovery_admin")),
+        }, indent=2) + "\n", encoding="utf-8")
+        os.chmod(marker, 0o644)
+        operations.append("System completion marker written.")
+    except OSError as exc:
+        fail(errors, "Completion marker", str(exc))
+        print(json.dumps({"ok": False, "operations": operations, "errors": errors}))
+        return 1
+
+    # The marker is only valid if first-boot autologin is gone. If a drop-in
+    # cannot be removed, remove the marker again and report failure so the OOBE
+    # resumes instead of silently leaving the account passwordless-at-login.
+    for dropin in AUTOLOGIN_DROPINS:
+        try:
+            if dropin.exists() or dropin.is_symlink():
+                dropin.unlink()
+                operations.append(f"Removed first-boot sign-in file {dropin}.")
+        except OSError as exc:
+            try:
+                marker.unlink()
+            except OSError:
+                pass
+            fail(errors, "First-boot sign-in", str(exc))
+            print(json.dumps({"ok": False, "operations": operations, "errors": errors}))
+            return 1
+
+    print(json.dumps({"ok": True, "operations": operations, "errors": errors}))
+    return 0 if not errors else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

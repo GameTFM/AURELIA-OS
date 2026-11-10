@@ -1,7 +1,8 @@
 #!/bin/sh
-# Show the first-login setup on installed systems only. On the live ISO the
-# installer is the setup path, and the Calamares session must not be covered by
-# another setup window.
+# Show the OOBE on installed systems only. On the live ISO the installer is the
+# setup path. Both markers are checked: the OOBE writes the user marker, and the
+# privileged helper writes the system marker before first-boot autologin is
+# removed. This prevents setup from ever running twice.
 set -eu
 
 if [ -d /run/live ] || [ -d /cdrom/casper ] \
@@ -10,7 +11,7 @@ if [ -d /run/live ] || [ -d /cdrom/casper ] \
 fi
 
 marker="${XDG_CONFIG_HOME:-$HOME/.config}/aurelia-setup-complete"
-if [ -f "$marker" ]; then
+if [ -f "$marker" ] || [ -f /var/lib/aurelia/oobe-complete ]; then
     exit 0
 fi
 

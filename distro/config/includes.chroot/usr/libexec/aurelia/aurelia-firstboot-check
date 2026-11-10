@@ -1,0 +1,34 @@
+#!/bin/sh
+# AURELIA first-boot detection. Runs before the display manager.
+# Until the OOBE has written its root marker, the first local administrator is
+# signed in automatically so setup can run. The helper removes this drop-in
+# after setup, restoring the normal SDDM lock screen.
+set -eu
+
+STATE=/var/lib/aurelia
+MARKER="$STATE/oobe-complete"
+SDDM_DROPIN=/etc/sddm.conf.d/zz-aurelia-firstboot.conf
+
+mkdir -p "$STATE"
+
+if [ -f "$MARKER" ]; then
+    rm -f "$SDDM_DROPIN"
+    exit 0
+fi
+
+user="$(getent passwd | awk -F: '$3 >= 1000 && $3 < 60000 && $7 !~ /(nologin|false)$/ { print $1; exit }')"
+[ -n "$user" ] || exit 0
+
+session=plasma
+[ -f /usr/share/wayland-sessions/plasma.desktop ] || session=plasmax11
+
+mkdir -p /etc/sddm.conf.d
+umask 077
+cat > "$SDDM_DROPIN" <<EOF
+[Autologin]
+User=$user
+Session=$session
+Relogin=false
+EOF
+chmod 0600 "$SDDM_DROPIN"
+echo "AURELIA: first boot detected for $user; OOBE will run before the lock screen."

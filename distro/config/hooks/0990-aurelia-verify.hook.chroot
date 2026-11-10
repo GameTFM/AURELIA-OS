@@ -27,6 +27,28 @@ required="
 /usr/libexec/aurelia/aurelia-setup-first-run
 /usr/share/fonts/truetype/aurelia/PlayfairDisplay.ttf
 /usr/libexec/aurelia/aurelia-first-login
+/usr/share/aurelia-migration/aurelia_migration.py
+/usr/share/aurelia-migration/aurelia-migration.py
+/usr/share/aurelia-backup/aurelia_backup.py
+/usr/share/aurelia-backup/aurelia-backup.py
+/usr/bin/aurelia-migration
+/usr/bin/aurelia-backup
+/usr/share/applications/aurelia-migration.desktop
+/usr/share/applications/aurelia-backup.desktop
+/usr/libexec/aurelia/aurelia-oobe-apply
+/usr/libexec/aurelia/aurelia-firstboot-check
+/usr/libexec/aurelia/aurelia-boot-guard
+/usr/libexec/aurelia/aurelia-recovery
+/usr/libexec/aurelia/aurelia-update-guard
+/etc/systemd/system/aurelia-firstboot.service
+/etc/systemd/system/aurelia-boot-guard.service
+/etc/systemd/system/aurelia-boot-success.service
+/etc/systemd/system/aurelia-recovery.service
+/etc/grub.d/41_aurelia_recovery
+/etc/systemd/system/sddm.service.d/10-aurelia.conf
+/etc/apt/apt.conf.d/90aurelia-update-guard
+/usr/share/plymouth/themes/aurelia/aurelia.script
+/usr/share/plymouth/themes/aurelia-light/aurelia-light.script
 "
 
 for path in $required; do
@@ -44,12 +66,122 @@ for binary in sddm Xorg calamares plasmashell startplasma-wayland kwin_wayland; 
     fi
 done
 
+# Calamares resolves branding under /usr/share/calamares/branding only. A
+# profile left in /etc/calamares/branding is silently ignored.
+if [ ! -f /usr/share/calamares/branding/aurelia/branding.desc ]; then
+    echo "AURELIA: installer branding is not on the Calamares search path" >&2
+    exit 1
+fi
+if ! grep -q '^doAutologin: false' /etc/calamares/modules/users.conf; then
+    echo "AURELIA: installer would autologin the installed user" >&2
+    exit 1
+fi
+if ! grep -q 'userdel -r aurelia' /etc/calamares/modules/shellprocess-targetcleanup.conf; then
+    echo "AURELIA: installer keeps the live account on the target" >&2
+    exit 1
+fi
+if ! grep -q 'grubcfg' /etc/calamares/settings.conf; then
+    echo "AURELIA: installer never writes the target GRUB configuration" >&2
+    exit 1
+fi
+
+# KDE's Welcome Center autostarted on the live desktop and kept appearing even
+# with a Hidden=true autostart override in place. AURELIA ships its own setup
+# experience, and nothing depends on plasma-welcome, so the package is not
+# installed at all. Failing here keeps the window from silently returning.
+if command -v plasma-welcome >/dev/null 2>&1; then
+    echo "AURELIA: KDE Welcome Center is still installed" >&2
+    exit 1
+fi
+
+if ! getent passwd aurelia >/dev/null 2>&1; then
+    echo "AURELIA live user is missing: aurelia" >&2
+    exit 1
+fi
+
+# Ubuntu ships NetworkManager with unmanaged-devices=*,except:type:wifi,... so
+# netplan owns Ethernet on server images. AURELIA has no netplan: with that
+# policy the live session measured ens3 DOWN and DNS failing, so the shipped
+# policy must hand wired devices back to NetworkManager.
+if grep -q '^unmanaged-devices=\*' \
+    /usr/lib/NetworkManager/conf.d/10-globally-managed-devices.conf; then
+    echo "AURELIA: NetworkManager still ignores wired devices" >&2
+    exit 1
+fi
+if ! grep -q '^unmanaged-devices=$' \
+    /usr/lib/NetworkManager/conf.d/10-globally-managed-devices.conf; then
+    echo "AURELIA: wired device policy was not overridden" >&2
+    exit 1
+fi
+for service in NetworkManager.service systemd-resolved.service; do
+    if ! systemctl is-enabled "$service" >/dev/null 2>&1; then
+        echo "AURELIA: $service is not enabled" >&2
+        exit 1
+    fi
+done
+
+for path in /etc/systemd/system/display-manager.service \
+    /etc/systemd/system/graphical.target.wants/sddm.service; do
+    if [ ! -e "$path" ]; then
+        echo "AURELIA display manager link is missing: $path" >&2
+        exit 1
+    fi
+done
+
+# Casper's live console starts an explicit getty@tty1 job that wins systemd's
+# conflict resolution against SDDM, so SDDM is dropped from the boot
+# transaction entirely. tty1 must stay masked for the display manager.
+if [ ! -L /etc/systemd/system/getty@tty1.service ]; then
+    echo "AURELIA: getty@tty1 is not masked; SDDM cannot own tty1" >&2
+    exit 1
+fi
+
+# sddm.service ships Conflicts=plymouth-quit-wait.service. That unit is part of
+# every live-image boot transaction, so a conflicting SDDM start job is dropped
+# without a default-level journal entry and the live desktop never appears.
+if ! grep -q '^Conflicts=$' /etc/systemd/system/sddm.service.d/10-aurelia.conf; then
+    echo "AURELIA: SDDM drop-in does not clear the inherited plymouth conflict" >&2
+    exit 1
+fi
+
+# A Conflicts=display-manager.service anywhere in the normal boot transaction
+# makes systemd delete SDDM's start job while building the transaction, even
+# when the conflicting unit's own condition later fails. That produced a boot
+# with graphical.target active, no display manager and no failed units.
+for unit in /etc/systemd/system/aurelia-*.service; do
+    if grep -q '^Conflicts=.*display-manager' "$unit"; then
+        echo "AURELIA: $unit conflicts with the display manager on every boot" >&2
+        exit 1
+    fi
+done
+
+# Recovery boots must mask SDDM instead of conflicting with it at runtime.
+if ! grep -q 'systemd.mask=sddm.service' /etc/grub.d/41_aurelia_recovery; then
+    echo "AURELIA: the recovery entry does not mask the display manager" >&2
+    exit 1
+fi
+
+# World-writable units are ignored with a warning and are root-escalation paths.
+for unit in /etc/systemd/system/aurelia-*.service \
+    /etc/systemd/system/sddm.service.d/10-aurelia.conf; do
+    mode="$(stat -c %a "$unit")"
+    if [ "$mode" != 644 ] && [ "$mode" != 600 ]; then
+        echo "AURELIA: $unit has unsafe mode $mode" >&2
+        exit 1
+    fi
+done
+
 # NOVAIR is a real Qt WebEngine application. This checks the installed Python
 # binding and the launcher without opening a display or a browser window.
 python3 /usr/share/novair/novair.py --self-test
 python3 /usr/share/aurelia-setup/aurelia-setup.py --self-test
+python3 /usr/share/aurelia-backup/aurelia_backup.py --self-test
+python3 /usr/share/aurelia-migration/aurelia_migration.py --self-test
+python3 -m py_compile /usr/libexec/aurelia/aurelia-oobe-apply
 
-for launcher in /usr/bin/novair /usr/bin/aurelia-setup /usr/libexec/aurelia/aurelia-setup-first-run; do
+for launcher in /usr/bin/novair /usr/bin/aurelia-setup /usr/bin/aurelia-migration \
+    /usr/bin/aurelia-backup /usr/libexec/aurelia/aurelia-setup-first-run \
+    /usr/libexec/aurelia/aurelia-firstboot-check /usr/libexec/aurelia/aurelia-recovery; do
     if [ ! -x "$launcher" ]; then
         echo "AURELIA launcher is not executable: $launcher" >&2
         exit 1

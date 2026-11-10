@@ -27,6 +27,28 @@ required="
 /usr/libexec/aurelia/aurelia-setup-first-run
 /usr/share/fonts/truetype/aurelia/PlayfairDisplay.ttf
 /usr/libexec/aurelia/aurelia-first-login
+/usr/share/aurelia-migration/aurelia_migration.py
+/usr/share/aurelia-migration/aurelia-migration.py
+/usr/share/aurelia-backup/aurelia_backup.py
+/usr/share/aurelia-backup/aurelia-backup.py
+/usr/bin/aurelia-migration
+/usr/bin/aurelia-backup
+/usr/share/applications/aurelia-migration.desktop
+/usr/share/applications/aurelia-backup.desktop
+/usr/libexec/aurelia/aurelia-oobe-apply
+/usr/libexec/aurelia/aurelia-firstboot-check
+/usr/libexec/aurelia/aurelia-boot-guard
+/usr/libexec/aurelia/aurelia-recovery
+/usr/libexec/aurelia/aurelia-update-guard
+/etc/systemd/system/aurelia-firstboot.service
+/etc/systemd/system/aurelia-boot-guard.service
+/etc/systemd/system/aurelia-boot-success.service
+/etc/systemd/system/aurelia-recovery.service
+/etc/grub.d/41_aurelia_recovery
+/etc/systemd/system/sddm.service.d/10-aurelia.conf
+/etc/apt/apt.conf.d/90aurelia-update-guard
+/usr/share/plymouth/themes/aurelia/aurelia.script
+/usr/share/plymouth/themes/aurelia-light/aurelia-light.script
 "
 
 for path in $required; do
@@ -44,12 +66,38 @@ for binary in sddm Xorg calamares plasmashell startplasma-wayland kwin_wayland; 
     fi
 done
 
+if ! getent passwd aurelia >/dev/null 2>&1; then
+    echo "AURELIA live user is missing: aurelia" >&2
+    exit 1
+fi
+
+for path in /etc/systemd/system/display-manager.service \
+    /etc/systemd/system/graphical.target.wants/sddm.service; do
+    if [ ! -e "$path" ]; then
+        echo "AURELIA display manager link is missing: $path" >&2
+        exit 1
+    fi
+done
+
+# Casper's live console starts an explicit getty@tty1 job that wins systemd's
+# conflict resolution against SDDM, so SDDM is dropped from the boot
+# transaction entirely. tty1 must stay masked for the display manager.
+if [ ! -L /etc/systemd/system/getty@tty1.service ]; then
+    echo "AURELIA: getty@tty1 is not masked; SDDM cannot own tty1" >&2
+    exit 1
+fi
+
 # NOVAIR is a real Qt WebEngine application. This checks the installed Python
 # binding and the launcher without opening a display or a browser window.
 python3 /usr/share/novair/novair.py --self-test
 python3 /usr/share/aurelia-setup/aurelia-setup.py --self-test
+python3 /usr/share/aurelia-backup/aurelia_backup.py --self-test
+python3 /usr/share/aurelia-migration/aurelia_migration.py --self-test
+python3 -m py_compile /usr/libexec/aurelia/aurelia-oobe-apply
 
-for launcher in /usr/bin/novair /usr/bin/aurelia-setup /usr/libexec/aurelia/aurelia-setup-first-run; do
+for launcher in /usr/bin/novair /usr/bin/aurelia-setup /usr/bin/aurelia-migration \
+    /usr/bin/aurelia-backup /usr/libexec/aurelia/aurelia-setup-first-run \
+    /usr/libexec/aurelia/aurelia-firstboot-check /usr/libexec/aurelia/aurelia-recovery; do
     if [ ! -x "$launcher" ]; then
         echo "AURELIA launcher is not executable: $launcher" >&2
         exit 1

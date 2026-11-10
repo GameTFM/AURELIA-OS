@@ -1,10 +1,28 @@
 #!/bin/sh
 set -eu
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 export DEBIAN_FRONTEND=noninteractive
 
 systemctl enable sddm.service NetworkManager.service
 systemctl enable bluetooth.service || true
+# /etc/resolv.conf is the systemd-resolved stub symlink, so DNS only works when
+# the resolver unit is enabled. Without it the live system has a link but no
+# name resolution (observed: "Temporary failure resolving archive.ubuntu.com").
+systemctl enable systemd-resolved.service || true
 systemctl set-default graphical.target
+# graphical.target's Wants=display-manager.service is an alias dependency.
+# Add a direct wants link so SDDM is scheduled even if live-build's alias
+# handling differs inside the generated image.
+mkdir -p /etc/systemd/system/graphical.target.wants
+ln -snf /lib/systemd/system/sddm.service /etc/systemd/system/graphical.target.wants/sddm.service
+
+# SDDM owns tty1. Casper starts an explicit getty@tty1 job for the live
+# console; that job wins systemd's conflict resolution against SDDM's
+# Conflicts=getty@tty1.service, so the sddm start job is dropped without a
+# journal entry and graphical.target is reached with no display manager at
+# all. Mask the tty1 getty so nothing competes for the display manager's VT;
+# tty2-tty6 stay available for console logins.
+ln -sf /dev/null /etc/systemd/system/getty@tty1.service
 
 ln -snf /usr/share/zoneinfo/Etc/UTC /etc/localtime
 chmod 0755 /usr/libexec/aurelia/aurelia-flatpak-setup
@@ -12,6 +30,14 @@ chmod 0755 /usr/libexec/aurelia/aurelia-first-login
 chmod 0755 /usr/libexec/aurelia/aurelia-installer
 chmod 0755 /usr/libexec/aurelia/aurelia-setup-first-run
 chmod 0755 /usr/bin/novair /usr/share/novair/novair.py
+
+# Calamares resolves `branding: aurelia` under /usr/share/calamares/branding,
+# while the profile is authored in /etc/calamares/branding. Without this mirror
+# the installer silently falls back to the stock Calamares theme.
+mkdir -p /usr/share/calamares/branding
+rm -rf /usr/share/calamares/branding/aurelia
+cp -a /etc/calamares/branding/aurelia /usr/share/calamares/branding/aurelia
+chmod -R a+rX /usr/share/calamares/branding/aurelia
 chmod 0755 /usr/bin/aurelia-setup /usr/share/aurelia-setup/aurelia-setup.py
 
 # Casper/live-config otherwise rewrites the SDDM session at every boot.
@@ -19,6 +45,24 @@ mkdir -p /var/lib/live/config
 touch /var/lib/live/config/sddm
 chmod 0644 /etc/sddm.conf.d/20-aurelia.conf
 chmod 0644 /etc/sddm.conf.d/zzzz-aurelia-live.conf
+
+# Casper's live-user helper can fail in an initramfs with a restricted PATH
+# (observed as "Insecure directory in $ENV{PATH}" followed by chfn/usermod
+# errors for the wrong user). Bake the live account so SDDM autologin and the
+# live session do not depend on that helper succeeding at boot. The installer
+# still creates the real installed-system account separately.
+if ! id aurelia >/dev/null 2>&1; then
+    useradd -m -s /bin/bash -U aurelia
+fi
+passwd -d aurelia >/dev/null 2>&1 || true
+for group in sudo adm audio video plugdev netdev bluetooth scanner cdrom floppy lpadmin; do
+    if getent group "$group" >/dev/null 2>&1; then
+        usermod -aG "$group" aurelia >/dev/null 2>&1 || true
+    fi
+done
+chown -R aurelia:aurelia /home/aurelia
+printf '%s\n' 'aurelia ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/90-aurelia-live
+chmod 0440 /etc/sudoers.d/90-aurelia-live
 
 fc-cache -f
 update-desktop-database /usr/share/applications || true

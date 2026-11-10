@@ -1,9 +1,8 @@
 [Plymouth Theme]
 Name=AURELIA
-Description=AURELIA OS 1.0 Solstice
-ModuleName=two-step
+Description=AURELIA OS deep midnight startup
+ModuleName=script
 
-[two-step]
+[script]
 ImageDir=/usr/share/plymouth/themes/aurelia
-Image=aurelia-logo.png
-BackgroundColor=0x090a0e
+ScriptFile=/usr/share/plymouth/themes/aurelia/aurelia.script

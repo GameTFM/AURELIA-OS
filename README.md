@@ -29,10 +29,19 @@ legacy research track. They are not the base of the current distribution.
 | Bootloader | GRUB 2 (BIOS/UEFI packages, `shim-signed`) |
 | Installer | Calamares 3.3.14 with `unpackfsc` |
 | Browser | NOVAIR 1.0, a PyQt6 interface on Qt WebEngine |
-| First login | AURELIA Setup, 13 local setup screens |
+| First login | AURELIA Setup, 17 resumable OOBE screens |
 | Kernel | Ubuntu `linux-image-generic` |
 | Tooling | C++, Python, Bash, QML/JavaScript |
 | ISO builder | live-build with Casper |
+
+## Latest verified build
+
+Build 11 (`7456f31f36223ea59e49bf4797399de7e6ec10497a5e6a0437e9203911d1dff5`,
+2,473,328,640 bytes) boots to the AURELIA Plasma desktop with working wired
+networking and DNS, and no KDE Welcome window. NOVAIR still fails to start on a
+machine without a DRM render node; its XWayland fallback is in build 12 and is
+not yet verified. The release below still points at the previously published
+image. See `PROJECT_STATUS.md` for the measured state.
 
 ## Get the image
 
@@ -121,8 +130,18 @@ python3 scripts/validate.py
 - **NOVAIR** — an original tabbed browser with a new-tab page, search,
   bookmarks, history, downloads, private windows, settings, real permission
   prompts and a tracker deny-list, built on Qt WebEngine.
-- **First login** — installed systems open the 13-screen AURELIA Setup flow;
+- **First login** — installed systems open the 17-screen AURELIA OOBE;
   the live ISO skips it and uses Calamares instead.
+- **Windows migration** — scan a mounted Windows install or a supported backup,
+  choose files, review app compatibility, import NOVAIR bookmarks/history, and
+  optionally store an exported password CSV in an encrypted vault. The source
+  is mounted read-only and Windows executables are never treated as installed.
+- **Backup & Restore** — restic-backed encrypted incremental snapshots to local,
+  network and restic/rclone repositories, with verification, scheduling,
+  selective restore and Windows File History import.
+- **Boot and recovery** — branded GRUB and Plymouth script themes, first-boot
+  detection through a scoped systemd service, Safe Mode / Recovery GRUB entries,
+  a real text recovery console and a pre-update configuration archive.
 - **Start menu** — Kickoff in grid mode with real pinned apps and native
   power/session actions.
 - **Dock** — floating, centered, fit-content Plasma panel with Icon Tasks.

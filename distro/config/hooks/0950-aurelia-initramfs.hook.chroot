@@ -15,9 +15,61 @@ if [ ! -e "/lib/modules/$KVER/$overlay" ] && [ ! -e "/lib/modules/$KVER/$overlay
     exit 1
 fi
 
-if command -v plymouth-set-default-theme >/dev/null 2>&1; then
-    plymouth-set-default-theme aurelia >/dev/null 2>&1 || true
+# Plymouth: Ubuntu's initramfs-tools hook only carries the theme named in
+# /usr/share/plymouth/plymouthd.defaults (spinner), so the AURELIA splash that
+# ships in the squashfs never reached the live boot and the Plymouth logo
+# stayed Ubuntu's. Select the theme and ship it in the initramfs explicitly.
+mkdir -p /etc/plymouth
+cat > /etc/plymouth/plymouthd.conf <<'EOF'
+[Daemon]
+Theme=aurelia
+ShowDelay=0
+DeviceTimeout=8
+EOF
+
+[ -d /usr/share/plymouth/themes/aurelia ] || {
+    echo "AURELIA: the aurelia plymouth theme is missing" >&2
+    exit 1
+}
+
+cat > /etc/initramfs-tools/hooks/aurelia-plymouth <<'HOOK'
+#!/bin/sh
+# AURELIA: carry the AURELIA Plymouth theme (script module) into the initramfs.
+PREREQ="plymouth"
+prereqs() { echo "$PREREQ"; }
+case "$1" in
+    prereqs)
+        prereqs
+        exit 0
+        ;;
+esac
+
+THEME_SRC=/usr/share/plymouth/themes/aurelia
+THEME_DST="${DESTDIR}/usr/share/plymouth/themes/aurelia"
+PLUGIN_DIR=/usr/lib/x86_64-linux-gnu/plymouth
+PLUGIN_DST="${DESTDIR}${PLUGIN_DIR}"
+
+[ -d "$THEME_SRC" ] || exit 0
+
+mkdir -p "$THEME_DST"
+cp -a "$THEME_SRC"/. "$THEME_DST"/
+
+# The script module and the renderers the theme asks for must be present, or
+# plymouthd falls back to the text splash.
+if [ -d "$PLUGIN_DIR" ]; then
+    mkdir -p "$PLUGIN_DST"
+    for plugin in script.so label.so text.so details.so; do
+        [ -f "$PLUGIN_DIR/$plugin" ] && cp -a "$PLUGIN_DIR/$plugin" "$PLUGIN_DST/"
+    done
 fi
+
+# Fonts the theme renders text with.
+if [ -d /usr/share/fonts/truetype/dejavu ]; then
+    mkdir -p "${DESTDIR}/usr/share/fonts/truetype/dejavu"
+    cp -a /usr/share/fonts/truetype/dejavu/. "${DESTDIR}/usr/share/fonts/truetype/dejavu/" 2>/dev/null || true
+fi
+HOOK
+chmod 0755 /etc/initramfs-tools/hooks/aurelia-plymouth
 
 cat > /etc/initramfs-tools/modules <<'EOF'
 overlay
@@ -47,6 +99,16 @@ for initrd in /boot/initrd.img-*; do
         echo "AURELIA: $initrd does not contain overlayfs" >&2
         exit 1
     }
+done
+
+# The AURELIA splash has to be inside the initramfs; the squashfs copy alone is
+# only used after the root switch.
+for initrd in /boot/initrd.img-*; do
+    if lsinitramfs "$initrd" | grep -q 'themes/aurelia/aurelia.script'; then
+        echo "AURELIA: $initrd carries the AURELIA plymouth theme"
+    else
+        echo "AURELIA: WARNING: $initrd still lacks the AURELIA plymouth theme" >&2
+    fi
 done
 
 # live-build's chroot_hacks step regenerates /boot/initrd.img after the hooks

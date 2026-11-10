@@ -109,6 +109,14 @@ def check_shell() -> None:
         INCLUDE / "usr/bin/novair",
         INCLUDE / "usr/bin/aurelia-setup",
         INCLUDE / "usr/libexec/aurelia/aurelia-setup-first-run",
+        INCLUDE / "usr/libexec/aurelia/aurelia-firstboot-check",
+        INCLUDE / "usr/libexec/aurelia/aurelia-boot-guard",
+        INCLUDE / "usr/libexec/aurelia/aurelia-recovery",
+        INCLUDE / "usr/libexec/aurelia/aurelia-update-guard",
+        INCLUDE / "usr/bin/aurelia-backup",
+        INCLUDE / "etc/grub.d/41_aurelia_recovery",
+        INCLUDE / "usr/bin/aurelia-migration",
+        INCLUDE / "usr/bin/aurelia-backup",
     ]
     for path in sorted(set(shell_paths)):
         if not path.exists():
@@ -246,7 +254,31 @@ def check_required_payload() -> None:
         "usr/share/novair/novair.py",
         "usr/bin/novair",
         "usr/share/aurelia-setup/aurelia-setup.py",
+        "usr/share/aurelia-migration/aurelia_migration.py",
+        "usr/share/aurelia-migration/aurelia-migration.py",
+        "usr/share/aurelia-migration/app_catalog.json",
+        "usr/share/aurelia-backup/aurelia_backup.py",
+        "usr/share/aurelia-backup/aurelia-backup.py",
         "usr/bin/aurelia-setup",
+        "usr/bin/aurelia-migration",
+        "usr/bin/aurelia-backup",
+        "usr/share/applications/aurelia-migration.desktop",
+        "usr/share/applications/aurelia-backup.desktop",
+        "usr/libexec/aurelia/aurelia-oobe-apply",
+        "usr/libexec/aurelia/aurelia-firstboot-check",
+        "usr/libexec/aurelia/aurelia-boot-guard",
+        "usr/libexec/aurelia/aurelia-recovery",
+        "usr/libexec/aurelia/aurelia-update-guard",
+        "etc/apt/apt.conf.d/90aurelia-update-guard",
+        "etc/systemd/system/aurelia-firstboot.service",
+        "etc/systemd/system/aurelia-boot-guard.service",
+        "etc/systemd/system/aurelia-boot-success.service",
+        "etc/systemd/system/aurelia-recovery.service",
+        "etc/grub.d/41_aurelia_recovery",
+        "usr/share/plymouth/themes/aurelia/aurelia.plymouth",
+        "usr/share/plymouth/themes/aurelia/aurelia.script",
+        "usr/share/plymouth/themes/aurelia-light/aurelia-light.plymouth",
+        "usr/share/plymouth/themes/aurelia-light/aurelia-light.script",
         "etc/xdg/autostart/aurelia-setup.desktop",
         "usr/share/icons/hicolor/512x512/apps/novair.png",
         "usr/libexec/aurelia/aurelia-setup-first-run",
@@ -322,11 +354,21 @@ def check_branding_and_installer() -> None:
     layout = (
         INCLUDE / "usr/share/plasma/look-and-feel/org.aurelia.solstice/contents/layouts/org.kde.plasma.desktop-layout.js"
     ).read_text(encoding="utf-8")
-    for token in ["org.aurelia.clock", "org.aurelia.calendar", "org.kde.plasma.notes", "org.kde.plasma.mediacontroller", "org.kde.plasma.weather", "org.kde.plasma.systemmonitor", "org.kde.plasma.icontasks", "org.kde.plasma.kickoff", "novair.desktop"]:
+    for token in ["org.aurelia.clock", "org.aurelia.calendar", "org.kde.plasma.mediacontroller", "org.kde.plasma.icontasks", "org.kde.plasma.kickoff", "novair.desktop"]:
         if token not in layout:
             fail(f"Plasma layout missing {token}")
         else:
             passed(f"Plasma layout token {token}")
+    # Empty placeholder cards are deliberately absent from the first-login
+    # layout: Weather and System Monitor render as bare frames until the user
+    # configures them, and the Notes sticky ships its own yellow style, which
+    # made a fresh desktop look unfinished. They stay installed and available
+    # from the widget explorer.
+    for token in ["org.kde.plasma.notes", "org.kde.plasma.weather", "org.kde.plasma.systemmonitor"]:
+        if token in layout:
+            fail(f"Plasma layout must not ship the empty {token} card")
+        else:
+            passed(f"Plasma layout omits {token}")
     if "\"favorites\"" not in layout:
         fail("Plasma layout must configure Kickoff favorites")
     if "install-aurelia.desktop" in layout:
@@ -419,6 +461,8 @@ def check_novair() -> None:
         "new_tab_html",
         "DownloadState",
         "novair.db",
+        "unique_download_path",
+        "downloadRequested",
     ):
         if token not in source:
             fail(f"NOVAIR source is missing {token}")
@@ -429,20 +473,101 @@ def check_novair() -> None:
         fail("NOVAIR launcher does not invoke the installed application")
     else:
         passed("NOVAIR launcher target")
+    if "QTWEBENGINE_CHROMIUM_FLAGS" not in launcher:
+        fail("NOVAIR launcher lacks the software-rendering fallback")
+    else:
+        passed("NOVAIR software-rendering fallback")
 
 
 def check_setup_app() -> None:
     source = (INCLUDE / "usr/share/aurelia-setup/aurelia-setup.py").read_text(encoding="utf-8")
-    for token in ("SetupWindow", "STEPS", "plasma-apply-colorscheme", "hostnamectl", "aurelia-setup-complete"):
+    for token in ("SetupWindow", "STEPS", "plasma-apply-colorscheme", "aurelia-oobe-apply",
+                  "MIGRATION_APP", "BACKUP_APP", "aurelia-setup-complete", "recovery_name",
+                  "theme", "17"):
         if token not in source:
             fail(f"AURELIA setup source is missing {token}")
         else:
             passed(f"AURELIA setup token {token}")
+    if "hostnamectl" in source and "aurelia-oobe-apply" in source:
+        passed("privileged hostname operation is delegated")
     autostart = (INCLUDE / "etc/xdg/autostart/aurelia-setup.desktop").read_text(encoding="utf-8")
     if "aurelia-setup-first-run" not in autostart:
         fail("setup autostart does not use the live-session guard")
     else:
         passed("setup autostart live-session guard")
+
+
+def check_new_systems() -> None:
+    backup = (INCLUDE / "usr/share/aurelia-backup/aurelia_backup.py").read_text(encoding="utf-8")
+    for token in ("restic", "snapshots", "check_repository", "restore_windows_backup",
+                  "FileHistory", "write_schedule", "encrypted", "password_file"):
+        if token not in backup:
+            fail(f"backup backend is missing {token}")
+        else:
+            passed(f"backup backend token {token}")
+    migration = (INCLUDE / "usr/share/aurelia-migration/aurelia_migration.py").read_text(encoding="utf-8")
+    for token in ("discover_installations", "mount_installation", "install_application",
+                  "import_browser_data", "store_encrypted_passwords", "copy_file_groups",
+                  "application", "Windows"):
+        if token not in migration:
+            fail(f"migration backend is missing {token}")
+        else:
+            passed(f"migration backend token {token}")
+    boot = (INCLUDE / "usr/libexec/aurelia/aurelia-firstboot-check").read_text(encoding="utf-8")
+    for token in ("oobe-complete", "zz-aurelia-firstboot.conf", "SDDM"):
+        if token not in boot:
+            fail(f"first-boot detector is missing {token}")
+        else:
+            passed(f"first-boot detector token {token}")
+    recovery = (INCLUDE / "usr/libexec/aurelia/aurelia-recovery").read_text(encoding="utf-8")
+    for token in ("forcefsck", "restic", "grub-install", "update-grub", "Safe Mode"):
+        if token not in recovery:
+            fail(f"recovery environment is missing {token}")
+        else:
+            passed(f"recovery environment token {token}")
+    grub = (INCLUDE / "etc/grub.d/41_aurelia_recovery").read_text(encoding="utf-8")
+    for token in ("aurelia-recovery", "aurelia-safe", "aurelia.recovery=1", "nomodeset"):
+        if token not in grub:
+            fail(f"GRUB recovery entries are missing {token}")
+        else:
+            passed(f"GRUB recovery token {token}")
+    plymouth = (INCLUDE / "usr/share/plymouth/themes/aurelia/aurelia.plymouth").read_text(encoding="utf-8")
+    if "ModuleName=script" not in plymouth:
+        fail("Plymouth is not using the branded script module")
+    else:
+        passed("Plymouth script module")
+    guard = (INCLUDE / "usr/libexec/aurelia/aurelia-update-guard").read_text(encoding="utf-8")
+    for token in ("update-in-progress", "system-config-", "/var/backups/aurelia"):
+        if token not in guard:
+            fail(f"update guard is missing {token}")
+        else:
+            passed(f"update guard token {token}")
+    users = yaml.safe_load((INCLUDE / "etc/calamares/modules/users.conf").read_text(encoding="utf-8"))
+    # Calamares autologin applies to the installed account and would skip the
+    # password prompt forever. The OOBE login is a separate first-boot drop-in.
+    if users.get("doAutologin") is not False:
+        fail("installer would autologin the installed user")
+    else:
+        passed("installer does not autologin the installed user")
+    if "loginName" in (users.get("presets") or {}):
+        fail("installer presets a login name that collides with the live account")
+    else:
+        passed("installer leaves the login name to the user")
+    cleanup = (
+        INCLUDE / "etc/calamares/modules/shellprocess-targetcleanup.conf"
+    ).read_text(encoding="utf-8")
+    for token in ("userdel -r aurelia", "sudoers.d/90-aurelia-live", "purge -y casper"):
+        if token not in cleanup:
+            fail(f"target cleanup is missing {token}")
+        else:
+            passed(f"target cleanup removes {token}")
+    for script in (INCLUDE / "usr/share/aurelia-backup/aurelia_backup.py",
+                   INCLUDE / "usr/share/aurelia-migration/aurelia_migration.py"):
+        result = subprocess.run([sys.executable, str(script), "--self-test"], capture_output=True, text=True, check=False)
+        if result.returncode:
+            fail(f"self-test {script.relative_to(ROOT)}: {(result.stderr or result.stdout).strip()}")
+        else:
+            passed(f"self-test {script.relative_to(ROOT)}")
 
 
 def main() -> int:
@@ -458,6 +583,7 @@ def main() -> int:
     check_branding_and_installer()
     check_novair()
     check_setup_app()
+    check_new_systems()
     check_images()
     check_lean_policy()
     check_packages()

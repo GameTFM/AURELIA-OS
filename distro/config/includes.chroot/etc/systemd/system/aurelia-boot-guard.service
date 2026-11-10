@@ -1,0 +1,12 @@
+[Unit]
+Description=AURELIA boot failure guard
+After=local-fs.target
+Before=display-manager.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/aurelia/aurelia-boot-guard
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

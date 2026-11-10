@@ -1,0 +1,85 @@
+# AURELIA dark startup. Full-screen, branded and deliberately quiet.
+Window.SetBackgroundTopColor(0.020, 0.035, 0.050);
+Window.SetBackgroundBottomColor(0.040, 0.070, 0.090);
+
+screen_width = Window.GetWidth();
+screen_height = Window.GetHeight();
+
+logo_image = Image("aurelia-logo.png").Scale(300, 300);
+logo_sprite = Sprite(logo_image);
+logo_sprite.SetPosition((screen_width - logo_image.GetWidth()) / 2, screen_height / 2 - 300);
+
+glow_sprite = Sprite(logo_image);
+glow_sprite.SetPosition((screen_width - logo_image.GetWidth()) / 2, screen_height / 2 - 300);
+glow_sprite.SetOpacity(0.12);
+
+wordmark_image = Image.Text("AURELIA", 0.86, 0.74, 0.48);
+wordmark_sprite = Sprite(wordmark_image);
+wordmark_sprite.SetPosition((screen_width - wordmark_image.GetWidth()) / 2, screen_height / 2 + 55);
+
+subtitle_image = Image.Text("OPERATING SYSTEM", 0.52, 0.64, 0.70);
+subtitle_sprite = Sprite(subtitle_image);
+subtitle_sprite.SetPosition((screen_width - subtitle_image.GetWidth()) / 2, screen_height / 2 + 85);
+
+bar_width = screen_width * 0.24;
+bar_x = (screen_width - bar_width) / 2;
+bar_y = screen_height / 2 + 180;
+bar_background = Rectangle();
+bar_background.SetColor(0.08, 0.14, 0.18, 0.92);
+bar_background.SetSize(bar_width, 3);
+bar_background.SetPosition(bar_x, bar_y);
+
+bar_fill = Rectangle();
+bar_fill.SetColor(0.79, 0.66, 0.42, 1.0);
+bar_fill.SetSize(1, 3);
+bar_fill.SetPosition(bar_x, bar_y);
+
+dot_one = Rectangle();
+dot_one.SetColor(0.79, 0.66, 0.42, 0.9);
+dot_one.SetSize(5, 5);
+dot_one.SetPosition(bar_x - 16, bar_y - 1);
+dot_two = Rectangle();
+dot_two.SetColor(0.79, 0.66, 0.42, 0.6);
+dot_two.SetSize(5, 5);
+dot_two.SetPosition(bar_x - 30, bar_y - 1);
+dot_three = Rectangle();
+dot_three.SetColor(0.79, 0.66, 0.42, 0.3);
+dot_three.SetSize(5, 5);
+dot_three.SetPosition(bar_x - 44, bar_y - 1);
+
+message_image = Image.Text("Starting AURELIA…", 0.62, 0.73, 0.78);
+message_sprite = Sprite(message_image);
+message_sprite.SetPosition((screen_width - message_image.GetWidth()) / 2, bar_y + 28);
+
+frame = 0;
+
+fun boot_progress_callback(duration, progress) {
+    if (progress < 0) { progress = 0; }
+    if (progress > 1) { progress = 1; }
+    bar_fill.SetSize(progress * bar_width, 3);
+}
+
+fun message_callback(text) {
+    message_image = Image.Text(text, 0.62, 0.73, 0.78);
+    message_sprite.SetImage(message_image);
+    message_sprite.SetPosition((screen_width - message_image.GetWidth()) / 2, bar_y + 28);
+    message_sprite.SetOpacity(1);
+}
+
+fun hide_message_callback() {
+    message_sprite.SetOpacity(0);
+}
+
+fun refresh_callback() {
+    frame = frame + 1;
+    pulse = 0.10 + 0.035 * (1 + Math.Sin(frame / 34));
+    glow_sprite.SetOpacity(pulse);
+    dot_one.SetOpacity(0.35 + 0.55 * (0.5 + 0.5 * Math.Sin(frame / 12)));
+    dot_two.SetOpacity(0.35 + 0.55 * (0.5 + 0.5 * Math.Sin(frame / 12 - 1.6)));
+    dot_three.SetOpacity(0.35 + 0.55 * (0.5 + 0.5 * Math.Sin(frame / 12 - 3.2)));
+}
+
+Plymouth.SetBootProgressFunction(boot_progress_callback);
+Plymouth.SetDisplayMessageFunction(message_callback);
+Plymouth.SetHideMessageFunction(hide_message_callback);
+Plymouth.SetRefreshFunction(refresh_callback);

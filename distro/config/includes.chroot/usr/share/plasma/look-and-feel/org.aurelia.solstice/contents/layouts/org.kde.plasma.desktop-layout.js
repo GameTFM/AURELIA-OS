@@ -63,6 +63,8 @@ launcher.writeConfig("favorites", [
     "systemsettings.desktop",
     "org.kde.discover.desktop",
     "novair.desktop",
+    "aurelia-backup.desktop",
+    "aurelia-migration.desktop",
     "org.kde.kclock.desktop",
     "org.kde.haruna.desktop",
     "org.kde.kamoso.desktop",
@@ -115,16 +117,8 @@ desktop.addWidget("org.aurelia.clock",
     clockWidth,
     clockHeight);
 
-// Real KDE widgets supply the remaining reference-style cards without
-// inventing weather, reminders, or hardware telemetry.
-var notesWidth = Math.max(220, Math.round(screen.width * 0.15));
-var notesHeight = Math.max(240, Math.round(screen.height * 0.28));
-desktop.addWidget("org.kde.plasma.notes",
-    screen.width - notesWidth - Math.round(screen.width * 0.022),
-    Math.round(screen.height * 0.13),
-    notesWidth,
-    notesHeight);
-
+// Media card. This is a real KDE widget: it stays empty until a media player
+// is actually running, which is honest rather than a placeholder.
 var mediaWidth = calendarWidth;
 var mediaHeight = Math.max(92, Math.round(screen.height * 0.12));
 desktop.addWidget("org.kde.plasma.mediacontroller",
@@ -133,21 +127,8 @@ desktop.addWidget("org.kde.plasma.mediacontroller",
     mediaWidth,
     mediaHeight);
 
-// Real KDE Weather and System Monitor widgets complete the widget set.
-// Weather remains empty until a location is chosen, and System Monitor shows
-// real system sensors; neither invents data.
-var weatherWidth = Math.max(250, Math.round(screen.width * 0.155));
-var weatherHeight = Math.max(190, Math.round(screen.height * 0.20));
-desktop.addWidget("org.kde.plasma.weather",
-    screen.width - weatherWidth - Math.round(screen.width * 0.022),
-    Math.round(screen.height * 0.45),
-    weatherWidth,
-    weatherHeight);
-
-var monitorWidth = Math.max(280, Math.round(screen.width * 0.17));
-var monitorHeight = Math.max(170, Math.round(screen.height * 0.18));
-desktop.addWidget("org.kde.plasma.systemmonitor",
-    screen.width - monitorWidth - Math.round(screen.width * 0.022),
-    Math.round(screen.height * 0.70),
-    monitorWidth,
-    monitorHeight);
+// Deliberately no Weather, Notes or System Monitor card on a fresh desktop:
+// Weather and System Monitor render as empty frames until the user picks a
+// location or configures sensors, and the Notes sticky ships in its own yellow
+// style. Shipping empty frames made the first-login desktop look unfinished.
+// All three are still installed and can be added from the widget explorer.

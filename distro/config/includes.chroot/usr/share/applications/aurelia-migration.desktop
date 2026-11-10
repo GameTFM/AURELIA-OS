@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Windows Migration
+GenericName=Move files and applications from Windows
+Comment=Scan a Windows installation or backup and bring selected files and supported apps to AURELIA
+Exec=aurelia-migration
+TryExec=aurelia-migration
+Icon=aurelia-logo
+Terminal=false
+StartupNotify=true
+Categories=System;Utility;
+Keywords=migrate;windows;transfer;files;apps;aurelia;

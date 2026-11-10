@@ -28,3 +28,14 @@ firmware-sof-signed
 thermald
 secureboot-db
 xdg-desktop-portal
+restic
+rclone
+cifs-utils
+nfs-common
+ntfs-3g
+udisks2
+gnupg
+libsecret-tools
+keepassxc
+python3-pefile
+icoutils

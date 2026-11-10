@@ -99,16 +99,31 @@ use rsync-based `unpackfs`, which is known to hit xattr `RERR_FILEIO` failures.
 
 ### First-login setup
 
-On an installed system, the first KDE login opens **AURELIA Setup**, a real
-13-screen PyQt6 setup flow. It writes the chosen region and keyboard layout to
-KDE configuration, applies the Midnight or Ivory colour scheme, stores the
-selected accent, can copy a profile picture and can change the hostname through
-polkit. Its account, network and privacy buttons open the real KDE settings
-modules; it does not expose controls that do nothing.
+On an installed system, first boot is detected by
+`aurelia-firstboot.service`, which temporarily enables autologin for the first
+local administrator. The first KDE login opens **AURELIA Setup**, a real
+17-screen PyQt6 out-of-box experience with a progress rail, Back navigation and
+resumable `~/.config/aurelia-setup.json` state. It configures language, region,
+time zone, keyboard, network, computer name, migration choice, backup entry
+points, account, password, profile picture, privacy, light/dark appearance,
+accent, optional apps and final configuration.
+
+The privileged helper `aurelia-oobe-apply` receives passwords only through a
+mode-0600 temporary payload, changes the account password through `chpasswd`,
+uses real `hostnamectl`, `timedatectl`, `useradd`, AccountsService avatar paths
+and a Plymouth theme selection, then writes the system completion marker and
+removes first-boot autologin. It does not claim success if an operation fails.
+
+Windows migration and Backup & Restore are separate launchable applications.
+The migration source is mounted read-only, compatible apps map to reviewed
+APT/Flatpak packages, incompatible apps remain reference inventory, and browser
+passwords require an explicit CSV-import consent and an encrypted vault.
+Backups use restic, real repositories, scheduling and verification.
 
 The autostart guard skips `/run/live`, so the flow never covers the live
-installer. A completed setup writes `~/.config/aurelia-setup-complete`; closing
-it early leaves the marker absent so it appears again at the next login.
+installer. A completed setup writes both `~/.config/aurelia-setup-complete` and
+`/var/lib/aurelia/oobe-complete`; interrupted setup leaves the autologin and
+state in place so it resumes safely.
 
 ## What the desktop actually is
 
@@ -122,7 +137,7 @@ it early leaves the marker absent so it appears again at the next login.
 | Right weather | Stock KDE Weather `org.kde.plasma.weather` | Real widget; empty until a location is chosen |
 | Right system monitor | Stock KDE System Monitor `org.kde.plasma.systemmonitor` | Real sensors |
 | Browser | NOVAIR 1.0: PyQt6/Qt WebEngine tabs, new-tab page, bookmarks, history, downloads, private profile, settings, permissions and tracker blocklist | Real Qt WebEngine session |
-| First login | AURELIA Setup, 13 local screens on installed systems only | Real configuration writes; live ISO uses Calamares |
+| First login | AURELIA Setup, 17 resumable OOBE screens on installed systems only | Real configuration writes; live ISO uses Calamares |
 | Start menu | Kickoff in grid mode with pinned real applications | Stock KDE menu; power/account actions real |
 | Taskbar | Floating, centered, fit-content Plasma panel with Icon Tasks | Real windows and launchers |
 | Wallpaper | Original generated 4K mountain-and-pine scene + ivory variant | Installed image packages |
@@ -226,9 +241,10 @@ the QML or that Calamares can install a disk. See [TESTING.md](TESTING.md).
 - **Flathub setup is first-login/network-dependent.** No Flatpak applications
   are preinstalled, so the ISO remains smaller and does not download during the
   image build.
-- **Only x86_64** is supported. No ARM, Secure Boot validation, Plymouth splash
-  redesign, installer slideshow, recovery environment or signing/update channel
-  is included.
+- **Only x86_64** is supported. No ARM, Secure Boot validation, installer
+  slideshow or signing/update channel is included. Plymouth script themes,
+  Safe Mode/Recovery entries, the recovery console and the pre-update guard are
+  implemented but have not been runtime-tested on a booted installed system.
 - **The Calamares/Plasma versions here are statically matched to `resolute` 
   package metadata; package updates can change runtime behavior.**
 
@@ -249,8 +265,11 @@ distro/
     usr/share/wallpapers/       Plasma wallpaper packages
     usr/libexec/aurelia/        first-login, installer, Flatpak and setup helpers
     usr/share/novair/           NOVAIR PyQt6/Qt WebEngine browser
-    usr/share/aurelia-setup/    13-screen first-login setup
-    usr/bin/                    novair and aurelia-setup launchers
+    usr/share/aurelia-setup/    17-screen resumable OOBE
+    usr/share/aurelia-migration/ Windows migration backend, catalog and wizard
+    usr/share/aurelia-backup/    restic backup/restore engine and application
+    usr/libexec/aurelia/       OOBE helper, first-boot, recovery and update guard
+    usr/bin/                    novair, setup, migration and backup launchers
   scripts/                      artwork, validation, build, QEMU boot
   assets/                       generated source artwork, font, license
 ```

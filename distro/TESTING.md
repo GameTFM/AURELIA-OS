@@ -5,17 +5,59 @@
 | Check | Status |
 |---|---|
 | Static validator | **PASS** (see [VERIFICATION.md](VERIFICATION.md)) |
-| Ubuntu `resolute` package names | **PASS** (107/107 found in archive indexes) |
+| Ubuntu `resolute` package names | **PASS** (archive indexes) |
+| Migration backend self-test | **PASS** (fake NTFS tree; files, apps, browser, no-overwrite) |
+| Backup backend self-test | **PASS** (File History scan, selective restore and SHA-256 verify) |
+| OOBE 17-screen/schema self-test | **PASS** on the Linux payload |
 | Original artwork generated | **PASS** (verified dimensions in validator) |
-| legacy AURELIA kernel build | **PASS** (not part of the Ubuntu image) |
-| live-build ISO | **PASS** in GitHub Actions (`ubuntu:26.04`) |
-| QEMU live boot | **PASS** under BIOS and UEFI; see [VERIFICATION.md](VERIFICATION.md) |
-| Plasma runtime/QML render | **PASS** for the live desktop; first-login flow still unrun |
-| Calamares install | **NOT RUN** |
-| Installed GRUB/SDDM/SDDM autologin cleanup | **NOT RUN** |
+| Full clean ISO build in WSL | **PASS** — `AURELIA payload verification OK` |
+| Payload verifier (`build/ci/verify-iso.sh`) | **PASS** — 16/16 |
+| QEMU BIOS live boot to Plasma | **PASS on build 10** — `sddm` active, `kwin_wayland` + `plasmashell` running, 0 failed units, desktop captured in `build/ci/live10-screen.png` |
+| AURELIA Plymouth splash | **PASS** — the AURELIA theme renders instead of Ubuntu's |
+| NOVAIR window | **PASS** — real Qt WebEngine toolbar, tabs and status bar |
+| NOVAIR navigation | **FAIL on build 11** — still `libEGL … failed to create dri2 screen` then `The Wayland connection broke`, exit 255; XWayland fallback in build 12, unverified |
+| Live networking / DNS | **PASS on build 11** — `ens3:ethernet:connected`, `10.0.2.15/24`, default via `10.0.2.2`, `example.com` resolved via `systemd-resolved` |
+| KWin stability without a GPU | **PASS on build 10** — `kwin_wayland` stayed up with no `/dev/dri/renderD128`; the Plasma session used the software-GL fallback |
+| QEMU UEFI live desktop | **NOT CONFIRMED** — reaches GRUB and the graphical splash |
+| Calamares install / installed boot | **NOT RUN** |
+| Installed GRUB/SDDM/autologin cleanup | **NOT RUN** |
 
 The static checks cannot prove a QML component renders, a Plasma applet loads,
 Calamares writes a disk correctly, or GRUB boots the installed system.
+
+## 0. Local WSL harness
+
+A full ISO is built and boot-tested without GitHub Actions:
+
+- `scripts/build-iso.sh` inside the `AURELIA-BUILD` WSL distribution (Ubuntu
+  26.04), run as root;
+- `build/ci/verify-iso.sh` — 16 payload assertions against the built tree: live
+  user, SDDM alias and `graphical.target` links, the `getty@tty1` mask, the
+  SDDM Plymouth drop-in, the initramfs Plymouth theme and overlayfs, and the
+  checksum manifest;
+- `build/ci/boot-iso.sh` — BIOS QEMU boot of the ISO, QEMU monitor on port 5556;
+- `build/ci/boot-kernel.sh` — boots the ISO's own kernel and initramfs with a
+  custom command line; add `console=ttyS0` to `APPEND` for a full boot log in
+  `build/ci/serial.log`;
+- `build/ci/boot-serial.sh` — same kernel boot with the serial console on TCP,
+  so the guest shell can be driven live from the host;
+- `build/ci/guest-run.py` — logs into that console once and runs a batch of
+  commands, writing the transcript to `build/ci/guest-session.log`. It proves a
+  shell exists by sending a probe command and requiring both the echoed line and
+  the command's output; the earlier version matched `login:` in stale boot text
+  and typed the batch into the login prompt;
+- `build/ci/boot-kernel.sh` with `systemd.log_level=debug systemd.log_target=console`
+  in `APPEND` writes the whole boot transaction to `build/ci/serial.log`, which is
+  how the dropped SDDM start job in root cause 7 was found;
+- `build/ci/qemu-screen.py` — screen dumps through the QEMU monitor;
+- `build/ci/sendkey.py` — keyboard injection. QEMU expects `shift-a`, not
+  `shift+a`; the old harness silently dropped every uppercase letter and pipe
+  character because of that, which made guest diagnostics look empty.
+
+Two harness gotchas worth remembering: variables passed through `wsl.exe`'s
+argv do not survive (use the script files under `build/ci/`), and a WSL loop
+mount disappears when the distribution idles out, so mount, copy and unmount in
+a single invocation.
 
 ## 1. Static checks
 
@@ -144,8 +186,21 @@ The references are target compositions. Check the actual rendered desktop at
 - Test UEFI and BIOS installs separately.
 - Test with no network: Flatpak setup should not hang or block login.
 - On the installed system, confirm AURELIA Setup appears once after the first
-  login, applies the chosen KDE settings, and does not appear again after
-  finishing. Confirm the live ISO never launches it.
+  boot, resumes after an interrupted close, applies the chosen KDE settings,
+  removes first-boot autologin, and does not appear again after finishing.
+  Confirm the live ISO never launches it.
+- Complete the migration wizard against a disposable Windows VM: verify the
+  source stays read-only, existing files are not overwritten by default,
+  incompatible apps are only inventoried, bookmarks/history land in NOVAIR,
+  and password import requires explicit consent plus an encrypted vault.
+- Create a restic backup to a local folder, verify it, restore a selected
+  folder into an empty destination, and confirm hashes and history. Import a
+  File History tree and confirm the scan/select/restore/verify sequence.
+- Reboot through normal, Safe Mode and Recovery entries; interrupt setup once
+  and confirm resumption; schedule a filesystem check; run the package repair
+  and bootloader repair menus only against a disposable disk.
+- Interrupt an APT transaction and confirm `/var/lib/aurelia/update-in-progress`
+  appears and the recovery console reports it.
 - Launch NOVAIR, open two tabs, use the new-tab page, add/remove a bookmark,
   inspect history, start a download, open a private window, change a setting
   and reload the browser.

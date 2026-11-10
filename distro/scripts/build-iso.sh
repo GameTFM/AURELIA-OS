@@ -103,6 +103,13 @@ GRUB_CFG="$TREE/boot/grub/grub.cfg"
 if [ -f "$GRUB_CFG" ]; then
     sed -i -e 's/Debian GNU\/Linux/AURELIA OS/g' \
         -e 's|xbmc.tga|splash.tga|' "$GRUB_CFG"
+    # Keep a serial console on every kernel line. The live image is also used
+    # headless, and the CI boot harness reads kernel and systemd output from
+    # ttyS0; without it a hung session leaves no diagnostics at all.
+    sed -i -E '/^[[:space:]]*linux[[:space:]]/{/console=ttyS0/!s|[[:space:]]*$| console=ttyS0,115200|}' "$GRUB_CFG"
+    if ! grep -q 'console=ttyS0' "$GRUB_CFG"; then
+        echo "W: no serial console on the kernel command line." >&2
+    fi
     if ! grep -q '^set timeout=' "$GRUB_CFG"; then
         sed -i '/^set default=0/a set timeout=10' "$GRUB_CFG"
     fi
@@ -163,6 +170,21 @@ EOF
     rm -rf "$WORK"
 else
     echo "W: $TREE/boot/grub is missing; cannot rebuild boot images." >&2
+fi
+
+# casper-md5check verifies /md5sum.txt from the ISO root at boot and reports a
+# failed unit when it is missing or stale; live-build never wrote one for this
+# profile. This script also rewrites casper/initrd.img and boot/grub/grub.cfg
+# after live-build finishes, so generate the manifest from the final tree.
+# boot/grub/grub_eltorito is excluded on purpose: xorriso patches that image
+# with its boot info table while writing the ISO (-boot-info-table), so the
+# on-disc bytes never match a checksum taken from the tree beforehand.
+( cd "$TREE" && find . -type f ! -name md5sum.txt ! -path ./boot/grub/grub_eltorito -print0 \
+    | LC_ALL=C sort -z | xargs -0 -r md5sum > md5sum.txt ) || true
+if [ -s "$TREE/md5sum.txt" ]; then
+    echo "ISO checksum manifest: $(wc -l < "$TREE/md5sum.txt") files"
+else
+    echo "W: md5sum.txt was not generated; casper-md5check will fail." >&2
 fi
 
 HYBRID=0

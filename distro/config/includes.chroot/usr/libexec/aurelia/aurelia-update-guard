@@ -1,0 +1,50 @@
+#!/bin/sh
+# AURELIA package-update guard.
+#
+# APT invokes this before dpkg changes the system. It preserves the previous
+# system configuration in a timestamped archive under /var/backups and leaves a
+# marker until the package transaction completes. User home data is never
+# touched; restic backups and the recovery environment handle user files.
+set -u
+umask 077
+
+# APT calls --complete after dpkg. Only clear the interruption marker when
+# dpkg reports no half-configured or unpacked packages; a failed transaction
+# stays visible to the recovery environment.
+if [ "${1:-}" = "--complete" ]; then
+    if command -v dpkg >/dev/null 2>&1; then
+        audit="$(dpkg --audit 2>&1 || true)"
+        if [ -z "$audit" ]; then
+            rm -f /var/lib/aurelia/update-in-progress
+        else
+            printf 'AURELIA update guard: package audit is not clean; the interruption marker remains.\n' >&2
+        fi
+    fi
+    exit 0
+fi
+
+backup_dir=/var/backups/aurelia
+state_dir=/var/lib/aurelia
+mkdir -p "$backup_dir" "$state_dir"
+stamp="$(date +%Y%m%d-%H%M%S)"
+archive="$backup_dir/system-config-$stamp.tar.gz"
+
+paths=""
+for path in /etc/passwd /etc/group /etc/fstab /etc/default/grub /etc/sddm.conf.d \
+            /etc/apt/sources.list /etc/apt/sources.list.d /etc/calamares /etc/systemd/system \
+            /usr/libexec/aurelia /etc/plymouth/plymouthd.conf; do
+    [ -e "$path" ] && paths="$paths ${path#/}"
+done
+
+if [ -n "$paths" ]; then
+    # shellcheck disable=SC2086
+    tar -C / -czf "$archive" $paths 2>/dev/null || rm -f "$archive"
+fi
+printf '%s\n' "$stamp" > "$state_dir/update-in-progress"
+printf 'AURELIA update guard: pre-update configuration archived at %s\n' "$archive" | logger -t aurelia-update 2>/dev/null || true
+
+# Keep the three newest configuration archives.
+ls -1t "$backup_dir"/system-config-*.tar.gz 2>/dev/null | tail -n +4 | while read -r old; do
+    rm -f "$old"
+done
+exit 0

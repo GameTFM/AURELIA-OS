@@ -1,0 +1,29 @@
+#!/bin/sh
+# Count unsuccessful boots. After three attempts without reaching the desktop,
+# ask GRUB to boot the recovery menu once. A successful graphical boot clears
+# the counter through aurelia-boot-success.service.
+set -eu
+
+STATE=/var/lib/aurelia
+COUNTER="$STATE/boot-attempts"
+mkdir -p "$STATE"
+if grep -qw 'aurelia.safe=1' /proc/cmdline 2>/dev/null; then
+    rm -f "$COUNTER"
+    exit 0
+fi
+count=0
+[ -f "$COUNTER" ] && count="$(cat "$COUNTER" 2>/dev/null || echo 0)"
+case "$count" in
+    ''|*[!0-9]*) count=0 ;;
+esac
+count=$((count + 1))
+
+if [ "$count" -ge 3 ] && command -v grub-reboot >/dev/null 2>&1; then
+    if grub-reboot "AURELIA Recovery" >/dev/null 2>&1; then
+        echo "AURELIA: three failed boots; recovery menu scheduled for next start."
+        count=0
+    else
+        echo "AURELIA: could not schedule the recovery menu." >&2
+    fi
+fi
+printf '%s\n' "$count" > "$COUNTER"

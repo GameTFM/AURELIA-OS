@@ -1,4 +1,9 @@
-build/
+# Build output and artifacts stay local; the CI harness is source.
+build/*
+!build/ci/
+build/ci/*
+!build/ci/*.sh
+!build/ci/*.py
 toolchain/
 *.iso
 *.img
