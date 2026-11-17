@@ -32,8 +32,15 @@ sync_file() {
     rel="$1"
     mkdir -p "$(dirname "$DST/$rel")"
     cp -f "$SRC/$rel" "$DST/$rel"
-    tr -d '\r' < "$DST/$rel" > /tmp/aurelia-sync.tmp
-    mv /tmp/aurelia-sync.tmp "$DST/$rel"
+    # Only text files get CRLF stripped: doing this to a PNG deletes real CR
+    # bytes and produced "cannot identify image file" in a build.
+    case "$rel" in
+        *.png|*.jpg|*.jpeg|*.ico|*.ttf|*.otf|*.woff|*.woff2) ;;
+        *)
+            tr -d '\r' < "$DST/$rel" > /tmp/aurelia-sync.tmp
+            mv /tmp/aurelia-sync.tmp "$DST/$rel"
+            ;;
+    esac
     echo "synced $rel"
 }
 
