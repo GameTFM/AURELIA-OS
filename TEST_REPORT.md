@@ -22,6 +22,16 @@ TCG (no hardware virtualisation) for live boots.
 | NOVAIR window | **FAIL** — no window in either screenshot | `v12-screen.png`, `v12-late.png` |
 | Desktop panel / dock | **UNRESOLVED** — absent in both captures ~4 min apart; build 10's were captured much later, so timing is not excluded | same |
 
+## Diagnostics — 2026-11-15 (build 12 image, no rebuild)
+
+| Test | Result | Evidence |
+|---|---|---|
+| Control: ordinary KDE window renders | **PASS** — Konsole window visible | `build/ci/v12-diag4.png` |
+| NOVAIR, Wayland + software GL | Process alive, Qt builds menus, **no window** | `build/ci/v12-diag3.png`, `v12-diag3.log` |
+| NOVAIR, XWayland | **Aborts**: `could not connect to display :0`; xcb plugin needs `libxcb-cursor0` | `build/ci/v12-diag2.log` |
+| Panel count via D-Bus | **Not available** — Plasma 6.6 has no `PlasmaShell.evaluateScript` | `build/ci/v12-diag3.log` |
+| Applets config during session | **Absent** (`~/.config/plasma-org.kde.plasma.desktop-appletsrc`) | `v12-diag2.log`, `v12-diag4.log` |
+
 ## Build 11
 
 | Test | Result |

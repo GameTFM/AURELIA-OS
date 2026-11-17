@@ -28,6 +28,7 @@ wireplumber
 xdg-desktop-portal-kde
 polkit-kde-agent-1
 qt6-wayland
+libxcb-cursor0
 fonts-inter
 fonts-noto-core
 fonts-noto-color-emoji

@@ -40,10 +40,14 @@ Build 12 (`0988eaaa7e02271a1d4980910ead9887b2708fa539cab97fbd00ccca2691bb23`,
 2,473,328,640 bytes) has a verified 24/24 payload, boots to the AURELIA Plasma
 session with wired networking and DNS, and shows no KDE Welcome window. The
 installer configuration is corrected and checked, but no disk installation has
-been run. Two regressions remain open: NOVAIR's window does not appear without a
-DRM render node, and the top panel/dock are missing from the build-12 desktop.
-The release below still points at the previously published image. See
-`PROJECT_STATUS.md` for the measured state.
+been run.
+
+Two defects remain open and were measured on 2026-11-15: NOVAIR keeps running
+but never maps a window on a machine without a DRM render node, and the top
+panel and dock do not appear. A control launch of Konsole in the same VM renders
+normally, so neither is a screenshot artifact. The release below still points at
+the previously published image. See `PROJECT_STATUS.md` and `KNOWN_ISSUES.md`
+for the measured state.
 
 ## Get the image
 
@@ -71,6 +75,26 @@ not silently fall back to the legacy demo.
 
 The third form copies the 5.5 MB legacy custom-kernel image from `build/` and
 is explicitly labelled as the legacy demo, not the Ubuntu/KDE release.
+
+## Try it in a virtual machine
+
+`vm/` contains a real QEMU runner for Windows and Linux/macOS. It verifies the
+ISO's SHA-256, picks an available accelerator (KVM, WHPX or TCG) and boots the
+same BIOS configuration that has been tested. Pass `-DiskGB`/`DISK_GB` to attach
+an empty disk and exercise the installer without touching your own storage.
+
+```powershell
+.\vm\run-vm.ps1
+.\vm\run-vm.ps1 -DiskGB 24
+```
+
+```bash
+./vm/run-vm.sh
+DISK_GB=24 ./vm/run-vm.sh
+```
+
+See [`vm/README.md`](vm/README.md) for requirements and the limitations that
+apply inside a VM (software rendering, the two open defects above).
 
 ## Windows installer (Legacy Alpha)
 

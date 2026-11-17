@@ -38,12 +38,12 @@ ISO built with live-build + Casper.
 | DNS | PASS | `getent hosts example.com` succeeded |
 | KDE Welcome window | PASS — absent | transcript + screenshots |
 
-## Defects found on build 12
+## Defects found on build 12 (diagnosed 2026-11-15)
 
 | Area | State | Evidence |
 |---|---|---|
-| NOVAIR window | **FAIL** | with the XWayland fallback the process now survives (PID 1715 after 45 s, no "Wayland connection broke", no exit 255), but **no window appears** in either screenshot |
-| Desktop panel and dock | **UNRESOLVED** | `v12-screen.png` and `v12-late.png` (~4 min apart) show the Solstice calendar and clock but no top panel or dock. Build 10's full desktop was captured much later in its session, so confirm whether this is look-and-feel apply timing before calling it a regression. |
+| NOVAIR window | **FAIL, cause narrowed** | Under Wayland+software GL the process survives and Qt builds its menus, yet **no window maps**. The XWayland path aborts: `could not connect to display :0` and Qt 6.5+ needs `libxcb-cursor0`, which the image does not ship. Launcher corrected to require display + `XAUTHORITY` + the xcb-cursor library before choosing xcb. |
+| Desktop panel and dock | **FAIL, real** | A control launch of Konsole and KCalc renders a normal window in this same VM, so missing panels are not a capture artifact. `plasmashell` runs but never shows the two scripted panels; `plasma-org.kde.plasma.desktop-appletsrc` does not exist mid-session and Plasma 6.6 no longer exposes `PlasmaShell.evaluateScript`, so panels cannot be queried that way. Desktop widgets appeared in one boot and not another — the layout application is nondeterministic. |
 
 ## Build 13 must
 

@@ -3,25 +3,25 @@
 # so distribution packaging and static validation can inspect the real source.
 set -eu
 
-# Qt WebEngine requires a usable graphics context. On machines without a DRM
-# render node (VMs, some remote sessions) Qt aborts with
+# Qt WebEngine needs a usable graphics context. On machines without a DRM
+# render node (VMs, some remote sessions) Qt reports
 #   libEGL warning: egl: failed to create dri2 screen
-# and the browser exits before it paints a window. Plasma's own session gets the
-# fallback from /etc/xdg/plasma-workspace/env/10-aurelia-software-gl.sh, but a
-# browser launched from a terminal, the dock or an autostart file does not
-# inherit that, so the launcher applies the same real software path itself. A
-# machine with a render node keeps hardware acceleration untouched.
+# so the launcher selects a real software path. A machine with a render node
+# keeps hardware acceleration untouched.
 if [ ! -e /dev/dri/renderD128 ]; then
     export LIBGL_ALWAYS_SOFTWARE=1
     export QT_QUICK_BACKEND=software
     export QT_OPENGL=software
     export QTWEBENGINE_CHROMIUM_FLAGS="${QTWEBENGINE_CHROMIUM_FLAGS:---disable-gpu --enable-unsafe-swiftshader --disable-dev-shm-usage}"
-    # Qt's native Wayland EGL path needs a GBM/render node even when Mesa is
-    # told to render in software; it still prints "egl: failed to create dri2
-    # screen" and the browser exits. XWayland, which KWin starts in the Plasma
-    # session, reaches the same Mesa llvmpipe through GLX, so use it when a
-    # display is available. Verified in the next live boot, not yet in an ISO.
-    if [ -n "${DISPLAY:-}" ]; then
+
+    # XWayland is a valid alternative only when the session actually exported a
+    # display, its authority file is readable, and Qt's xcb-cursor dependency is
+    # installed. Measured: with any one missing, the xcb plugin aborts with
+    # "could not connect to display" or "xcb-cursor0 ... is needed" and NOVAIR
+    # never reaches a window. Without all three, stay on the Wayland platform,
+    # which keeps the process and its window construction alive.
+    if [ -n "${DISPLAY:-}" ] && [ -n "${XAUTHORITY:-}" ] && [ -r "${XAUTHORITY}" ] \
+        && ldconfig -p 2>/dev/null | grep -q 'libxcb-cursor\.so\.0'; then
         export QT_QPA_PLATFORM=xcb
     fi
 fi

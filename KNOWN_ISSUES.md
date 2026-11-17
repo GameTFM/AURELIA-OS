@@ -4,18 +4,22 @@ Status as of build 12 (2026-11-10).
 
 ## Open
 
-1. **NOVAIR shows no window on a machine without a DRM render node.** Build 12's
-   XWayland fallback stopped the crash: the process stayed alive for 45 s, printed
-   four `libEGL warning: egl: failed to create dri2 screen` lines, and never
-   reported `The Wayland connection broke`. But no browser window appeared in
-   either screenshot. The browser is still not usable there.
-2. **Desktop panel and dock are missing at capture time.** Build 12 boots to the
-   Solstice calendar and clock with a black background but no top panel or dock
-   in two screenshots taken ~4 minutes apart. Build 10's screenshot with panel
-   and dock was captured much later in that session, so this may be look-and-feel
-   apply timing rather than a regression. Confirm with a late capture and, if it
-   persists, inspect `~/.config/plasma-org.kde.plasma.desktop-appletsrc` and
-   plasmashell startup.
+1. **NOVAIR never maps a window on a machine without a DRM render node.**
+   Measured on build 12: with `QT_QPA_PLATFORM=wayland` plus software GL the
+   process stays alive and Qt logs its full menu construction, but no window
+   appears. The XWayland alternative aborts for two measured reasons — the probe
+   shell's `DISPLAY=:0` has no reachable authority, and Qt 6.5+ requires
+   `libxcb-cursor0`, which the image lacks. The launcher now requires display,
+   `XAUTHORITY` and `libxcb-cursor.so.0` before choosing xcb, and the package
+   list ships `libxcb-cursor0`; window mapping itself is still unresolved.
+2. **Desktop panel and dock never appear, and the layout is nondeterministic.**
+   Konsole renders normally in the same VM, so this is not a capture artifact.
+   `plasmashell` runs, yet the two scripted panels are absent in every capture,
+   and the desktop widgets appear in some boots and not others.
+   `plasma-org.kde.plasma.desktop-appletsrc` does not exist during the session,
+   and Plasma 6.6 no longer exposes `PlasmaShell.evaluateScript`, so the panel
+   containers cannot be queried through D-Bus. Investigate look-and-feel layout
+   application timing and panel (layer-shell) creation on this compositor.
 3. **Installer path untested.** Calamares configuration is corrected and the
    payload verifier checks it, but no installation to a disk has been run and no
    installed system has been booted.
