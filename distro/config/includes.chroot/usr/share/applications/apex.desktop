@@ -1,14 +1,14 @@
 [Desktop Entry]
 Type=Application
-Name=NOVAIR
+Name=Apex
 GenericName=Web Browser
 Comment=Browse the web with the AURELIA OS browser
-Exec=novair %U
-TryExec=novair
-Icon=novair
+Exec=apex %U
+TryExec=apex
+Icon=apex
 Terminal=false
 StartupNotify=true
-StartupWMClass=NOVAIR
+StartupWMClass=Apex
 Categories=Network;WebBrowser;
-Keywords=browser;web;internet;novair;aurelia;
+Keywords=browser;web;internet;apex;aurelia;
 MimeType=text/html;text/xml;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;

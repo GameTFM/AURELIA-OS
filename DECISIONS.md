@@ -22,7 +22,7 @@ Produces a hybrid BIOS/UEFI ISO with a squashfs live system and the standard
 Ubuntu live boot path, so installer and recovery work with well-understood
 tooling. The build is reproducible on the WSL Ubuntu 26.04 host.
 
-## D4 — NOVAIR on Qt WebEngine
+## D4 — Apex on Qt WebEngine
 
 The browser uses a real maintained engine (Chromium via Qt WebEngine) in a PyQt6
 shell, rather than a bespoke engine. Security and rendering stay with the engine;
@@ -31,7 +31,7 @@ AURELIA owns the interface, branding and AI sidebar.
 ## D5 — Graphics fallback by capability detection
 
 Software rendering is selected only when `/dev/dri/renderD128` is missing, in the
-Plasma session environment and in the NOVAIR launcher. Machines with a render node
+Plasma session environment and in the Apex launcher. Machines with a render node
 keep hardware acceleration. Rationale: measured EGL failures on a GPU-less VM
 (`egl: failed to create dri2 screen`) that aborted KWin and the browser.
 
@@ -63,3 +63,24 @@ package is not installed and the verifier asserts its absence.
 Diagnostics depended on it: a regenerated GRUB config silently dropped
 `console=ttyS0`, which made every post-GRUB boot look empty. `build-iso.sh` now
 appends `console=ttyS0,115200` to every kernel line and warns if it is absent.
+
+## Browser engine: Qt WebEngine, with Brave as a product reference
+
+**Problem.** The browser should feel like Brave, and the sketch named
+`brave-core` as the reference.
+
+**Options.** Build `brave-core` (a full Chromium fork: many hours, tens of
+gigabytes, a toolchain this build host does not have); fork Chromium directly;
+keep the existing Qt WebEngine application.
+
+**Decision.** Keep Qt WebEngine and rename the browser **Apex**. Brave's model —
+blocking on by default, privacy-first defaults, a built-in assistant — informs
+behaviour, not code. Apex keeps its own tabs, history, bookmarks, downloads,
+private windows and tracker deny-list in Python/Qt.
+
+**Trade-offs.** No Brave Sync, Rewards or Chromium extension compatibility, and
+no claim of Brave parity. In exchange the browser is inspectable, small enough
+to ship in the image, and maintainable by this project.
+
+**Revisit when.** A dedicated build machine with the Chromium depot tools and
+enough disk exists; only then is a real `brave-core` derivative defensible.

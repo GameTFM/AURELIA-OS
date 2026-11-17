@@ -45,7 +45,7 @@ build environment is disposable; the repository is the source of truth.
 - **No physical hardware.** Wi-Fi, Bluetooth, audio, suspend, touchpad, webcam,
   battery and external displays cannot be exercised here.
 - **No GPU.** The VM exposes `virtio-vga` with no DRM render node, which is
-  exactly the condition that exposes the NOVAIR graphics defect.
+  exactly the condition that exposes the Apex graphics defect.
 - **One serial client.** QEMU's TCP serial accepts a single connection, so guest
   diagnostics must attach before boot and stay attached.
 - **UEFI desktop untested.** OVMF reaches GRUB and the splash; the graphical

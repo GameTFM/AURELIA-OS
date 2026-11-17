@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-11-16 — Apex rename, standalone package, VM kit
+
+- The browser is renamed **Apex** across the payload: executable, desktop entry,
+  icons, KDE default browser, look-and-feel favourites, launcher path, build sync
+  list, validators and documentation. Static validation still passes 203 checks.
+- Added `packaging/apex/`, which builds a real `apex_1.0.0_amd64.deb` from the
+  same payload the ISO ships (verified with `dpkg-deb --info/--contents`).
+- Added `vm/` with Windows and Linux/macOS QEMU runners that verify the ISO
+  checksum, choose an available accelerator and can attach a disk for installer
+  testing.
+- Recorded that `brave-core` is not the browser's code base: it is a full
+  Chromium fork that this build environment cannot compile, and Apex remains a
+  Qt WebEngine application. Brave is used as a product reference only.
+
 ## 2026-11-10 — build 12 (verified)
 
 - Payload verifier **24/24 PASS**, including the installer checks: branding on
@@ -7,7 +21,7 @@
   the target, `grubcfg` present.
 - Live session: SDDM active, KWin and plasmashell running, `10.0.2.15/24` with a
   default route and working DNS, no KDE Welcome window.
-- NOVAIR: the XWayland fallback keeps the process alive (no exit 255, no Wayland
+- Apex: the XWayland fallback keeps the process alive (no exit 255, no Wayland
   disconnect) but **no window appears**; still not a working browser.
 - Desktop: the top panel and dock are missing in both build-12 screenshots
   (~4 minutes apart). Build 10's panel-and-dock capture was much later in its
@@ -28,7 +42,7 @@
   package absent, verifier asserts it).
 - Payload verifier now 21/21 (wired policy, Welcome absence, branding and
   installer checks added).
-- NOVAIR still aborts without a render node; the launcher's software-GL exports
+- Apex still aborts without a render node; the launcher's software-GL exports
   did not help because Qt's Wayland EGL path needs a GBM device. Build 12 adds
   an XWayland fallback for that case; it is not yet verified.
 
@@ -53,7 +67,7 @@
   server images. AURELIA ships no netplan, so NetworkManager never managed
   `ens3` and the live session had no address and no DNS. The distribution now
   ships that path with an empty list.
-- Fix NOVAIR aborting without a DRM render node. The launcher set Chromium's
+- Fix Apex aborting without a DRM render node. The launcher set Chromium's
   swiftshader flags but not Qt's, so Qt failed first with
   `libEGL warning: egl: failed to create dri2 screen`. It now exports
   `LIBGL_ALWAYS_SOFTWARE`, `QT_QUICK_BACKEND=software` and `QT_OPENGL=software`
@@ -62,7 +76,7 @@
   and ignored a `Hidden=true` autostart override; nothing depends on the package
   and AURELIA has its own setup experience.
 - One-boot live verification harness (`build/ci/live-verify.sh`): desktop,
-  NetworkManager link, DNS, stray windows and NOVAIR in the real session.
+  NetworkManager link, DNS, stray windows and Apex in the real session.
 
 ## 2026-11-08 — build 10
 

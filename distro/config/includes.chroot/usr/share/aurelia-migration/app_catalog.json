@@ -1,8 +1,8 @@
 {
   "version": 1,
   "apps": [
-    {"match": ["google chrome", "chrome"], "linux": {"type": "apt", "package": "chromium", "label": "Chromium"}, "alternative": "Chromium", "note": "Chrome profile bookmarks and history can also be imported into NOVAIR."},
-    {"match": ["microsoft edge", "edge"], "linux": {"type": "apt", "package": "chromium", "label": "Chromium"}, "alternative": "Chromium", "note": "Edge data is imported into NOVAIR where supported."},
+    {"match": ["google chrome", "chrome"], "linux": {"type": "apt", "package": "chromium", "label": "Chromium"}, "alternative": "Chromium", "note": "Chrome profile bookmarks and history can also be imported into Apex."},
+    {"match": ["microsoft edge", "edge"], "linux": {"type": "apt", "package": "chromium", "label": "Chromium"}, "alternative": "Chromium", "note": "Edge data is imported into Apex where supported."},
     {"match": ["mozilla firefox", "firefox"], "linux": {"type": "flatpak", "id": "org.mozilla.firefox", "label": "Mozilla Firefox"}, "alternative": "Mozilla Firefox (Flathub)"},
     {"match": ["mozilla thunderbird", "thunderbird"], "linux": {"type": "flatpak", "id": "org.mozilla.Thunderbird", "label": "Thunderbird"}, "alternative": "Thunderbird (Flathub)"},
     {"match": ["vlc media player", "vlc"], "linux": {"type": "apt", "package": "vlc", "label": "VLC media player"}},

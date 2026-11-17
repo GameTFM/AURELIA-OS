@@ -241,8 +241,8 @@ def logo_image(size: int = 1024) -> Image.Image:
     return image
 
 
-def novair_logo_image(size: int = 1024) -> Image.Image:
-    """NOVAIR's own orbital N mark, distinct from the AURELIA monogram."""
+def apex_logo_image(size: int = 1024) -> Image.Image:
+    """Apex's own orbital N mark, distinct from the AURELIA monogram."""
     image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(image)
     inset = int(size * 0.035)
@@ -297,11 +297,11 @@ def install_artwork(wall_dark: Image.Image, wall_light: Image.Image) -> None:
     save(logo, INCLUDE / "usr/share/icons/hicolor/512x512/apps/aurelia-logo.png")
     save(logo, INCLUDE / "etc/calamares/branding/aurelia/logo.png")
 
-    novair = novair_logo_image()
-    save(novair, ASSETS / "branding" / "novair-logo.png")
+    apex = apex_logo_image()
+    save(apex, ASSETS / "branding" / "apex-logo.png")
     for icon_size in (512, 256, 48):
-        save(novair.resize((icon_size, icon_size), Image.Resampling.LANCZOS),
-             INCLUDE / f"usr/share/icons/hicolor/{icon_size}x{icon_size}/apps/novair.png")
+        save(apex.resize((icon_size, icon_size), Image.Resampling.LANCZOS),
+             INCLUDE / f"usr/share/icons/hicolor/{icon_size}x{icon_size}/apps/apex.png")
 
     save(wall_dark, INCLUDE / "usr/share/wallpapers/AureliaSolstice/contents/images/3840x2160.png")
     save(wall_light, INCLUDE / "usr/share/wallpapers/AureliaIvory/contents/images/3840x2160.png")

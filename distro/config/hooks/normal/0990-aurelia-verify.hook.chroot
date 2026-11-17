@@ -18,10 +18,10 @@ required="
 /etc/calamares/modules/unpackfsc.conf
 /etc/calamares/modules/bootloader.conf
 /usr/share/applications/install-aurelia.desktop
-/usr/share/applications/novair.desktop
-/usr/share/novair/novair.py
-/usr/bin/novair
-/usr/share/icons/hicolor/512x512/apps/novair.png
+/usr/share/applications/apex.desktop
+/usr/share/apex/apex.py
+/usr/bin/apex
+/usr/share/icons/hicolor/512x512/apps/apex.png
 /usr/share/aurelia-setup/aurelia-setup.py
 /usr/bin/aurelia-setup
 /usr/libexec/aurelia/aurelia-setup-first-run
@@ -87,15 +87,15 @@ if [ ! -L /etc/systemd/system/getty@tty1.service ]; then
     exit 1
 fi
 
-# NOVAIR is a real Qt WebEngine application. This checks the installed Python
+# Apex is a real Qt WebEngine application. This checks the installed Python
 # binding and the launcher without opening a display or a browser window.
-python3 /usr/share/novair/novair.py --self-test
+python3 /usr/share/apex/apex.py --self-test
 python3 /usr/share/aurelia-setup/aurelia-setup.py --self-test
 python3 /usr/share/aurelia-backup/aurelia_backup.py --self-test
 python3 /usr/share/aurelia-migration/aurelia_migration.py --self-test
 python3 -m py_compile /usr/libexec/aurelia/aurelia-oobe-apply
 
-for launcher in /usr/bin/novair /usr/bin/aurelia-setup /usr/bin/aurelia-migration \
+for launcher in /usr/bin/apex /usr/bin/aurelia-setup /usr/bin/aurelia-migration \
     /usr/bin/aurelia-backup /usr/libexec/aurelia/aurelia-setup-first-run \
     /usr/libexec/aurelia/aurelia-firstboot-check /usr/libexec/aurelia/aurelia-recovery; do
     if [ ! -x "$launcher" ]; then

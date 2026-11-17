@@ -6,7 +6,7 @@ Last updated: 2026-11-10, after build 12.
 
 A real, installable Linux desktop distribution: Ubuntu 26.04 LTS "Resolute"
 foundation, KDE Plasma 6 on Wayland, AURELIA's own Plasma look-and-feel, SDDM
-greeter, Plymouth splash, wallpapers, icons, the NOVAIR browser, the AURELIA
+greeter, Plymouth splash, wallpapers, icons, the Apex browser, the AURELIA
 setup/OOBE, migration and backup tools, recovery entries and a hybrid BIOS/UEFI
 ISO built with live-build + Casper.
 
@@ -42,14 +42,14 @@ ISO built with live-build + Casper.
 
 | Area | State | Evidence |
 |---|---|---|
-| NOVAIR window | **FAIL, cause narrowed** | Under Wayland+software GL the process survives and Qt builds its menus, yet **no window maps**. The XWayland path aborts: `could not connect to display :0` and Qt 6.5+ needs `libxcb-cursor0`, which the image does not ship. Launcher corrected to require display + `XAUTHORITY` + the xcb-cursor library before choosing xcb. |
+| Apex window | **FAIL, cause narrowed** | Under Wayland+software GL the process survives and Qt builds its menus, yet **no window maps**. The XWayland path aborts: `could not connect to display :0` and Qt 6.5+ needs `libxcb-cursor0`, which the image does not ship. Launcher corrected to require display + `XAUTHORITY` + the xcb-cursor library before choosing xcb. |
 | Desktop panel and dock | **FAIL, real** | A control launch of Konsole and KCalc renders a normal window in this same VM, so missing panels are not a capture artifact. `plasmashell` runs but never shows the two scripted panels; `plasma-org.kde.plasma.desktop-appletsrc` does not exist mid-session and Plasma 6.6 no longer exposes `PlasmaShell.evaluateScript`, so panels cannot be queried that way. Desktop widgets appeared in one boot and not another — the layout application is nondeterministic. |
 
 ## Build 13 must
 
 1. Find why the panel/dock containers are not created (inspect
    `plasma-org.kde.plasma.desktop-appletsrc` and plasmashell startup).
-2. Make NOVAIR present a window; process survival is not a working browser.
+2. Make Apex present a window; process survival is not a working browser.
 
 ## Not yet verified
 

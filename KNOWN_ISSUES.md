@@ -4,7 +4,7 @@ Status as of build 12 (2026-11-10).
 
 ## Open
 
-1. **NOVAIR never maps a window on a machine without a DRM render node.**
+1. **Apex never maps a window on a machine without a DRM render node.**
    Measured on build 12: with `QT_QPA_PLATFORM=wayland` plus software GL the
    process stays alive and Qt logs its full menu construction, but no window
    appears. The XWayland alternative aborts for two measured reasons — the probe

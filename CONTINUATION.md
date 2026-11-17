@@ -10,7 +10,7 @@ Resolve the two build-12 defects before any further feature work:
    top panel (Kickoff, app menu, spacer, system tray, clock) and a bottom
    floating dock (Kickoff, icon tasks). Its desktop widgets *do* render, so the
    script runs; the panels are created but not visible.
-2. **NOVAIR presents no window.** The process stays alive with four
+2. **Apex presents no window.** The process stays alive with four
    `libEGL warning: egl: failed to create dri2 screen` lines. The previous probe
    exported only `WAYLAND_DISPLAY`; the launcher's XWayland fallback requires
    `DISPLAY` to be set, so it never engaged.
@@ -24,7 +24,7 @@ ISO once and runs:
 f=$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc
 grep -c "plugin=org.kde.panel" "$f"          # how many panel containers exist
 grep -n "^\[Containments\]" "$f" | head -8   # container ids/config groups
-DISPLAY=:0 QT_QPA_PLATFORM=xcb nohup novair https://example.com >/tmp/n2.log 2>&1 &
+DISPLAY=:0 QT_QPA_PLATFORM=xcb nohup apex https://example.com >/tmp/n2.log 2>&1 &
 sleep 45; tail -8 /tmp/n2.log; pgrep -a -f "[n]ovair"
 ```
 
@@ -37,7 +37,7 @@ plus `xwininfo -root -tree` when available and a framebuffer screenshot
    - If panels exist in the appletsrc but are invisible, check panel visibility
      config (`[Containments][N][General]`, `panelVisibility`) and whether the
      shell applied the layout before the panel containment was ready.
-   - If NOVAIR shows a window with `QT_QPA_PLATFORM=xcb` and `DISPLAY=:0`, the
+   - If Apex shows a window with `QT_QPA_PLATFORM=xcb` and `DISPLAY=:0`, the
      launcher must discover XWayland's display itself instead of relying on
      `DISPLAY` being exported (for example parse `~/.Xauthority`/`:0` from the
      running KWin, or set the platform in the desktop entry with

@@ -19,7 +19,7 @@ if [ -f "$SQ" ]; then
     unsquashfs -cat "$SQ" etc/passwd 2>/dev/null | grep -q '^aurelia:' \
         && pass "live user aurelia in /etc/passwd" || fail "live user aurelia in /etc/passwd"
 
-    for bin in usr/bin/sddm usr/bin/plasmashell usr/bin/novair usr/bin/aurelia-setup; do
+    for bin in usr/bin/sddm usr/bin/plasmashell usr/bin/apex usr/bin/aurelia-setup; do
         if unsquashfs -ll "$SQ" "$bin" 2>/dev/null | grep -q "$bin"; then
             pass "binary $bin"
         else

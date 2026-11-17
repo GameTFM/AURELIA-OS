@@ -14,8 +14,8 @@
 | Payload verifier (`build/ci/verify-iso.sh`) | **PASS** — 16/16 |
 | QEMU BIOS live boot to Plasma | **PASS on build 10** — `sddm` active, `kwin_wayland` + `plasmashell` running, 0 failed units, desktop captured in `build/ci/live10-screen.png` |
 | AURELIA Plymouth splash | **PASS** — the AURELIA theme renders instead of Ubuntu's |
-| NOVAIR window | **PASS** — real Qt WebEngine toolbar, tabs and status bar |
-| NOVAIR navigation | **FAIL on build 12** — XWayland fallback stops the crash (process alive, no Wayland disconnect) but no window appears; EGL warnings persist |
+| Apex window | **PASS** — real Qt WebEngine toolbar, tabs and status bar |
+| Apex navigation | **FAIL on build 12** — XWayland fallback stops the crash (process alive, no Wayland disconnect) but no window appears; EGL warnings persist |
 | Live networking / DNS | **PASS on build 11** — `ens3:ethernet:connected`, `10.0.2.15/24`, default via `10.0.2.2`, `example.com` resolved via `systemd-resolved` |
 | KWin stability without a GPU | **PASS on build 10** — `kwin_wayland` stayed up with no `/dev/dri/renderD128`; the Plasma session used the software-GL fallback |
 | QEMU UEFI live desktop | **NOT CONFIRMED** — reaches GRUB and the graphical splash |
@@ -72,12 +72,12 @@ It covers:
 - YAML parsing for every Calamares settings/module/branding file;
 - INI parsing for KDE, SDDM and `.desktop` files;
 - `bash -n` for live-build entrypoints, hooks and helpers;
-- Python compilation for artwork/validation/build tooling plus the NOVAIR
+- Python compilation for artwork/validation/build tooling plus the Apex
   and AURELIA Setup payloads;
-- shell syntax for the NOVAIR/setup launchers and the installed-system guard;
+- shell syntax for the Apex/setup launchers and the installed-system guard;
 - `node --check` for the Plasma layout;
 - QML delimiter validation for the clock, calendar and SDDM greeter;
-- required payload and non-empty image checks, including NOVAIR's Qt
+- required payload and non-empty image checks, including Apex's Qt
   WebEngine source, its icon and the setup autostart guard;
 - Calamares 3.3 `style` map, required settings keys, `unpackfsc` flat schema and
   required install steps;
@@ -191,7 +191,7 @@ The references are target compositions. Check the actual rendered desktop at
   Confirm the live ISO never launches it.
 - Complete the migration wizard against a disposable Windows VM: verify the
   source stays read-only, existing files are not overwritten by default,
-  incompatible apps are only inventoried, bookmarks/history land in NOVAIR,
+  incompatible apps are only inventoried, bookmarks/history land in Apex,
   and password import requires explicit consent plus an encrypted vault.
 - Create a restic backup to a local folder, verify it, restore a selected
   folder into an empty destination, and confirm hashes and history. Import a
@@ -201,7 +201,7 @@ The references are target compositions. Check the actual rendered desktop at
   and bootloader repair menus only against a disposable disk.
 - Interrupt an APT transaction and confirm `/var/lib/aurelia/update-in-progress`
   appears and the recovery console reports it.
-- Launch NOVAIR, open two tabs, use the new-tab page, add/remove a bookmark,
+- Launch Apex, open two tabs, use the new-tab page, add/remove a bookmark,
   inspect history, start a download, open a private window, change a setting
   and reload the browser.
 - Confirm the top-bar launcher, weather widget and system monitor load without

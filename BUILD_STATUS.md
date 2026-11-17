@@ -25,14 +25,14 @@ validator and asserts the installer tokens it depends on.
 
 | Build | Size (bytes) | Verifier | Notable |
 |---|---|---|---|
-| 12 | 2,473,328,640 | 24/24 | Installer corrected; NOVAIR survives but no window; panel/dock absent |
-| 11 | 2,473,328,640 | 21/21 | Wired networking + DNS; no Welcome window; NOVAIR exit 255 |
-| 10 | 2,475,753,472 | 19/19 | Desktop with panel/dock; network down; NOVAIR EGL abort |
+| 12 | 2,473,328,640 | 24/24 | Installer corrected; Apex survives but no window; panel/dock absent |
+| 11 | 2,473,328,640 | 21/21 | Wired networking + DNS; no Welcome window; Apex exit 255 |
+| 10 | 2,475,753,472 | 19/19 | Desktop with panel/dock; network down; Apex EGL abort |
 
 ## Build pipeline
 
 1. `build/ci/final-build.sh` syncs the distro tree, the validator, the
-   NetworkManager policy, the NOVAIR launcher, the desktop package list and the
+   NetworkManager policy, the Apex launcher, the desktop package list and the
    Calamares modules into `/opt/aurelia/distro`.
 2. `distro/scripts/build-iso.sh` runs `lb build` (live-build 3.0~a57) and writes
    `live-image-amd64.hybrid.iso`.
@@ -44,7 +44,7 @@ validator and asserts the installer tokens it depends on.
 Scope is limited to the two open defects:
 
 - panel/dock containers not visible;
-- NOVAIR window absent.
+- Apex window absent.
 
 Build 13 must not regress the 24 verified payload checks, the wired/DNS path or
 the absence of the KDE Welcome window.

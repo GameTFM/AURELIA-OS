@@ -4,7 +4,7 @@
 The wizard only exposes operations implemented by aurelia_migration: scan a
 mounted Windows installation, copy selected folders without overwriting by
 default, map applications to reviewed Linux packages, import browser data into
-NOVAIR, and optionally create an encrypted password vault.
+Apex, and optionally create an encrypted password vault.
 """
 from __future__ import annotations
 
@@ -398,7 +398,7 @@ class MigrationWindow(QMainWindow):
             self.browser_checks[profile["path"]] = check
             self.browser_layout.addWidget(check)
         note = QLabel(
-            "Bookmarks and history are imported into NOVAIR's real SQLite store. "
+            "Bookmarks and history are imported into Apex's real SQLite store. "
             "Chrome/Edge/Firefox preference files are preserved for reference because "
             "their Windows profile formats are not interchangeable with Linux browsers. "
             "Extensions and encrypted password databases are not silently copied."

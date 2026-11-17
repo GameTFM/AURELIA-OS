@@ -24,7 +24,7 @@ track; it is no longer the base of the desktop release.
 | Packages | APT + Flathub/Flatpak |
 | Bootloader | GRUB 2, BIOS + UEFI packages, `shim-signed` |
 | Installer | Calamares 3.3.14 + `unpackfsc` |
-| Browser | NOVAIR 1.0, original PyQt6 interface on Qt WebEngine |
+| Browser | Apex 1.0, original PyQt6 interface on Qt WebEngine |
 | Kernel | Ubuntu `linux-image-generic` |
 | Languages | C++, Python, Bash (theme QML/JS + Python build tooling) |
 | ISO builder | live-build with Casper initramfs |
@@ -136,7 +136,7 @@ state in place so it resumes safely.
 | Lower-left media | Stock KDE Media Controller `org.kde.plasma.mediacontroller` | Real MPRIS media when playing; empty otherwise |
 | Right weather | Stock KDE Weather `org.kde.plasma.weather` | Real widget; empty until a location is chosen |
 | Right system monitor | Stock KDE System Monitor `org.kde.plasma.systemmonitor` | Real sensors |
-| Browser | NOVAIR 1.0: PyQt6/Qt WebEngine tabs, new-tab page, bookmarks, history, downloads, private profile, settings, permissions and tracker blocklist | Real Qt WebEngine session |
+| Browser | Apex 1.0: PyQt6/Qt WebEngine tabs, new-tab page, bookmarks, history, downloads, private profile, settings, permissions and tracker blocklist | Real Qt WebEngine session |
 | First login | AURELIA Setup, 17 resumable OOBE screens on installed systems only | Real configuration writes; live ISO uses Calamares |
 | Start menu | Kickoff in grid mode with pinned real applications | Stock KDE menu; power/account actions real |
 | Taskbar | Floating, centered, fit-content Plasma panel with Icon Tasks | Real windows and launchers |
@@ -150,17 +150,17 @@ The Start menu is KDE Kickoff, not a bespoke launcher; its grid/pinned content
 is configured by the layout script. The Notes, Media Controller, Weather and
 System Monitor cards are KDE's real widgets, not fake reference screenshots.
 
-### NOVAIR
+### Apex
 
-NOVAIR is an original browser shell, not a renamed copy of an existing browser.
-Qt WebEngine provides the Chromium-derived renderer and network stack; NOVAIR
+Apex is an original browser shell, not a renamed copy of an existing browser.
+Qt WebEngine provides the Chromium-derived renderer and network stack; Apex
 provides the tabs, address/search bar, new-tab page, bookmarks, history,
 download manager, private window profile, settings, website-permission prompts,
 context menu and developer inspection surface. The new-tab page shows real
 bookmarks, recent history and a live local clock. Its search engine, homepage,
 theme, pop-up policy and tracker blocking setting are stored in
-`~/.config/novair/settings.json`; history and bookmarks live in
-`~/.local/share/novair/novair.db`.
+`~/.config/apex/settings.json`; history and bookmarks live in
+`~/.local/share/apex/apex.db`.
 
 The browser does not claim Chrome-extension support, a password vault, reader
 mode or in-page translation. Those features are not currently implemented and
@@ -190,7 +190,7 @@ calendar, and a floating centered dock.
 - `Aurelia.colors` — full Midnight/Ivory/Champagne palette.
 - `AureliaSolstice` and `AureliaIvory` Plasma wallpaper packages.
 - Original AURELIA hexagonal network mark (PNG), Calamares/SDDM/GRUB
-  backgrounds, and a separate NOVAIR orbital N icon.
+  backgrounds, and a separate Apex orbital N icon.
 - Playfair Display for the editorial clock; Inter for UI; both OFL-compatible.
   The bundled Playfair license is installed with the font.
 
@@ -222,7 +222,7 @@ the QML or that Calamares can install a disk. See [TESTING.md](TESTING.md).
   remains empty until a location is configured. There is no stock Reminders
   widget, so the release does not invent one. Battery, network and volume live
   in the Plasma system tray.
-- **NOVAIR implements the core browser, not every item in the wish list.** It
+- **Apex implements the core browser, not every item in the wish list.** It
   has tabs, bookmarks, history, downloads, private browsing, settings, find,
   permissions, pop-up blocking, tracker blocking and developer inspection. It
   does not implement Chrome extensions, a password vault, reader mode or
@@ -264,12 +264,12 @@ distro/
     usr/share/sddm/themes/      custom greeter
     usr/share/wallpapers/       Plasma wallpaper packages
     usr/libexec/aurelia/        first-login, installer, Flatpak and setup helpers
-    usr/share/novair/           NOVAIR PyQt6/Qt WebEngine browser
+    usr/share/apex/           Apex PyQt6/Qt WebEngine browser
     usr/share/aurelia-setup/    17-screen resumable OOBE
     usr/share/aurelia-migration/ Windows migration backend, catalog and wizard
     usr/share/aurelia-backup/    restic backup/restore engine and application
     usr/libexec/aurelia/       OOBE helper, first-boot, recovery and update guard
-    usr/bin/                    novair, setup, migration and backup launchers
+    usr/bin/                    apex, setup, migration and backup launchers
   scripts/                      artwork, validation, build, QEMU boot
   assets/                       generated source artwork, font, license
 ```

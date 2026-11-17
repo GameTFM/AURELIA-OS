@@ -19,7 +19,7 @@ python "$ROOT/build/ci/guest-run.py" --port 5557 --out "$LOG" \
     --cmd 'nmcli -t device; ip -brief addr; ip route | head -3; getent hosts example.com || echo DNS_FAIL' \
     --cmd 'resolvectl status 2>&1 | head -10; echo ---; cat /etc/resolv.conf' \
     --cmd 'ps -eo pid,ppid,cmd | grep -i "[p]lasma-welcome" || echo NO_WELCOME_WINDOW; echo ---; ls /etc/xdg/autostart/' \
-    --cmd 'uid=$(id -u); export XDG_RUNTIME_DIR=/run/user/$uid WAYLAND_DISPLAY=wayland-0; nohup novair https://example.com >/tmp/novair.log 2>&1 & sleep 45; echo "--- log"; cat /tmp/novair.log; echo "--- proc"; pgrep -a -f "[n]ovair" | head -3'
+    --cmd 'uid=$(id -u); export XDG_RUNTIME_DIR=/run/user/$uid WAYLAND_DISPLAY=wayland-0; nohup apex https://example.com >/tmp/apex.log 2>&1 & sleep 45; echo "--- log"; cat /tmp/apex.log; echo "--- proc"; pgrep -a -f "[n]ovair" | head -3'
 
 python "$ROOT/build/ci/qemu-screen.py" --port 5556 --out "$PREFIX-screen.png" || true
 echo "live verify complete: log=$LOG screenshot=$ROOT/build/ci/$PREFIX-screen.png"

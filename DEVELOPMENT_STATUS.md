@@ -15,7 +15,7 @@ results live in `TEST_REPORT.md`, and the exact resume point is in
 | 4 — Aurelia desktop (Plasma) | **Partial** | SDDM, KWin and plasmashell run; the top panel and dock were absent at capture |
 | 5 — Core applications | **Present, not exercised** | Dolphin, Konsole, Kate, Discover, Gwenview, Ark, KCalc, Haruna, Kamoso, KOrganizer, Elisa, System Monitor installed |
 | 6–8 — JARVIS (AI) | **Interface and provider plumbing only** | No provider key, no end-to-end inference run |
-| 9 — Browser (NOVAIR) | **Blocked** | Process survives under the fallback; no window appears |
+| 9 — Browser (Apex) | **Blocked** | Process survives under the fallback; no window appears |
 | 10 — Gaming | **Packages/services only** | GameMode/MangoHud/Gamescope wired; no measurement possible under TCG |
 | 11 — Installer and migration | **Configured, not exercised** | Payload verifier passes 24/24; no disk installation run |
 | 12 — Application ecosystem | **Partial** | Discover/Flatpak present; no store transaction run |
@@ -25,10 +25,10 @@ results live in `TEST_REPORT.md`, and the exact resume point is in
 
 ## Active work
 
-- **Build 13 scope:** make the panel/dock appear, and make NOVAIR present a real
+- **Build 13 scope:** make the panel/dock appear, and make Apex present a real
   window on a machine without a DRM render node.
 - Diagnosis in flight: one live boot that dumps the panel containers from
-  `plasma-org.kde.plasma.desktop-appletsrc` and launches NOVAIR with
+  `plasma-org.kde.plasma.desktop-appletsrc` and launches Apex with
   `DISPLAY=:0 QT_QPA_PLATFORM=xcb` (the environment a desktop-launched app gets,
   which the previous probe shell never provided).
 
@@ -44,7 +44,7 @@ results live in `TEST_REPORT.md`, and the exact resume point is in
 
 ## Blocking defects
 
-1. NOVAIR window never appears (process alive, EGL fallback warnings).
+1. Apex window never appears (process alive, EGL fallback warnings).
 2. Panel and dock absent in build 12 captures.
 3. No Calamares installation has ever been completed.
 

@@ -179,7 +179,7 @@ class BackupWindow(QMainWindow):
             "profile": "Entire user profile (home directory)",
             "documents": "Documents", "pictures": "Pictures", "videos": "Videos",
             "music": "Music", "desktop": "Desktop",
-            "application_configs": "Application configurations and NOVAIR data",
+            "application_configs": "Application configurations and Apex data",
         }
         for key, label in labels.items():
             check = QCheckBox(label)

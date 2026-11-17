@@ -106,7 +106,7 @@ def check_shell() -> None:
         INCLUDE / "usr/libexec/aurelia/aurelia-flatpak-setup",
         INCLUDE / "usr/libexec/aurelia/aurelia-first-login",
         INCLUDE / "usr/libexec/aurelia/aurelia-installer",
-        INCLUDE / "usr/bin/novair",
+        INCLUDE / "usr/bin/apex",
         INCLUDE / "usr/bin/aurelia-setup",
         INCLUDE / "usr/libexec/aurelia/aurelia-setup-first-run",
         INCLUDE / "usr/libexec/aurelia/aurelia-firstboot-check",
@@ -250,9 +250,9 @@ def check_required_payload() -> None:
         "usr/share/fonts/truetype/aurelia/PlayfairDisplay.ttf",
         "usr/share/fonts/truetype/aurelia/OFL.txt",
         "usr/share/applications/install-aurelia.desktop",
-        "usr/share/applications/novair.desktop",
-        "usr/share/novair/novair.py",
-        "usr/bin/novair",
+        "usr/share/applications/apex.desktop",
+        "usr/share/apex/apex.py",
+        "usr/bin/apex",
         "usr/share/aurelia-setup/aurelia-setup.py",
         "usr/share/aurelia-migration/aurelia_migration.py",
         "usr/share/aurelia-migration/aurelia-migration.py",
@@ -280,7 +280,7 @@ def check_required_payload() -> None:
         "usr/share/plymouth/themes/aurelia-light/aurelia-light.plymouth",
         "usr/share/plymouth/themes/aurelia-light/aurelia-light.script",
         "etc/xdg/autostart/aurelia-setup.desktop",
-        "usr/share/icons/hicolor/512x512/apps/novair.png",
+        "usr/share/icons/hicolor/512x512/apps/apex.png",
         "usr/libexec/aurelia/aurelia-setup-first-run",
         "usr/libexec/aurelia/aurelia-first-login",
         "usr/libexec/aurelia/aurelia-installer",
@@ -354,7 +354,7 @@ def check_branding_and_installer() -> None:
     layout = (
         INCLUDE / "usr/share/plasma/look-and-feel/org.aurelia.solstice/contents/layouts/org.kde.plasma.desktop-layout.js"
     ).read_text(encoding="utf-8")
-    for token in ["org.aurelia.clock", "org.aurelia.calendar", "org.kde.plasma.mediacontroller", "org.kde.plasma.icontasks", "org.kde.plasma.kickoff", "novair.desktop"]:
+    for token in ["org.aurelia.clock", "org.aurelia.calendar", "org.kde.plasma.mediacontroller", "org.kde.plasma.icontasks", "org.kde.plasma.kickoff", "apex.desktop"]:
         if token not in layout:
             fail(f"Plasma layout missing {token}")
         else:
@@ -384,7 +384,7 @@ def check_images() -> None:
     expected = {
         "usr/share/wallpapers/AureliaSolstice/contents/images/3840x2160.png": (3840, 2160),
         "usr/share/wallpapers/AureliaIvory/contents/images/3840x2160.png": (3840, 2160),
-        "usr/share/icons/hicolor/512x512/apps/novair.png": (512, 512),
+        "usr/share/icons/hicolor/512x512/apps/apex.png": (512, 512),
         "usr/share/sddm/themes/aurelia/background.png": (1920, 1080),
         "etc/calamares/branding/aurelia/background.png": (1920, 1080),
         "boot/grub/themes/aurelia/background.png": (1920, 1080),
@@ -452,31 +452,31 @@ def check_packages() -> None:
         passed(f"all {len(requested)} package names exist in resolute archive")
 
 
-def check_novair() -> None:
-    source = (INCLUDE / "usr/share/novair/novair.py").read_text(encoding="utf-8")
+def check_apex() -> None:
+    source = (INCLUDE / "usr/share/apex/apex.py").read_text(encoding="utf-8")
     for token in (
         "QWebEngineView",
         "QWebEngineProfile",
         "setUrlRequestInterceptor",
         "new_tab_html",
         "DownloadState",
-        "novair.db",
+        "apex.db",
         "unique_download_path",
         "downloadRequested",
     ):
         if token not in source:
-            fail(f"NOVAIR source is missing {token}")
+            fail(f"Apex source is missing {token}")
         else:
-            passed(f"NOVAIR token {token}")
-    launcher = (INCLUDE / "usr/bin/novair").read_text(encoding="utf-8")
-    if "/usr/share/novair/novair.py" not in launcher:
-        fail("NOVAIR launcher does not invoke the installed application")
+            passed(f"Apex token {token}")
+    launcher = (INCLUDE / "usr/bin/apex").read_text(encoding="utf-8")
+    if "/usr/share/apex/apex.py" not in launcher:
+        fail("Apex launcher does not invoke the installed application")
     else:
-        passed("NOVAIR launcher target")
+        passed("Apex launcher target")
     if "QTWEBENGINE_CHROMIUM_FLAGS" not in launcher:
-        fail("NOVAIR launcher lacks the software-rendering fallback")
+        fail("Apex launcher lacks the software-rendering fallback")
     else:
-        passed("NOVAIR software-rendering fallback")
+        passed("Apex software-rendering fallback")
 
 
 def check_setup_app() -> None:
@@ -581,7 +581,7 @@ def main() -> int:
     check_qml()
     check_required_payload()
     check_branding_and_installer()
-    check_novair()
+    check_apex()
     check_setup_app()
     check_new_systems()
     check_images()

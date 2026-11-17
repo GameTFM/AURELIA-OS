@@ -15,7 +15,7 @@ so there is one source of truth rather than per-app restyling.
 | Greeter | `/usr/share/sddm/themes/aurelia/` (`Main.qml`, `background.png`, `theme.conf`) |
 | Boot splash | `/usr/share/plymouth/themes/aurelia/` and `aurelia-light/` |
 | Display and UI type | `/usr/share/fonts/truetype/aurelia/PlayfairDisplay.ttf`, greeter font `Inter` |
-| Iconography | `/usr/share/icons/hicolor/` plus the NOVAIR and AURELIA mark assets |
+| Iconography | `/usr/share/icons/hicolor/` plus the Apex and AURELIA mark assets |
 
 ## Principles
 
@@ -31,7 +31,7 @@ so there is one source of truth rather than per-app restyling.
    desktop shell.
 5. **Consistency across apps.** Applications use the KDE platform widgets so they
    inherit the same colour roles, spacing and focus rings instead of private
-   styling. NOVAIR follows the same roles in Qt stylesheets.
+   styling. Apex follows the same roles in Qt stylesheets.
 6. **Explain, never fake.** Unavailable hardware or providers are shown as
    unavailable with the reason; no decorative switch or invented reading.
 

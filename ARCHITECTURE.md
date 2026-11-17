@@ -8,7 +8,7 @@ init             systemd; Casper live boot; Plymouth AURELIA theme
 display manager  SDDM with the AURELIA greeter, autologin on the live image
 session          KWin on Wayland + plasmashell, AURELIA Solstice look-and-feel
 shell plugins    org.aurelia.clock, org.aurelia.calendar (QML plasmoids)
-applications     NOVAIR (PyQt6 + Qt WebEngine), AURELIA Setup/OOBE, Files/Dolphin,
+applications     Apex (PyQt6 + Qt WebEngine), AURELIA Setup/OOBE, Files/Dolphin,
                  Discover, Terminal, system monitors
 system services  NetworkManager + systemd-resolved, power-profiles-daemon,
                  udisks2, accounts-daemon, aurelia-firstboot,
@@ -47,7 +47,7 @@ never allowed to conflict with the display manager in a normal transaction.
 
 `/etc/xdg/plasma-workspace/env/10-aurelia-software-gl.sh` selects Mesa software
 rendering and the Qt Quick software backend only when `/dev/dri/renderD128` is
-absent. `/usr/bin/novair` applies the same detection for Qt and Chromium so the
+absent. `/usr/bin/apex` applies the same detection for Qt and Chromium so the
 browser works when launched outside the Plasma session environment.
 
 ## Networking policy

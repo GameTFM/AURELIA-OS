@@ -42,7 +42,7 @@ the initramfs) and then boots the live ISO once for `live-verify.sh`.
 - `build/ci/guest-run.py` — connects once, logs in, proves a shell with a probe,
   then runs a batch; each command is read back by a marker on its own line.
 - `build/ci/live-verify.sh` — one boot: SDDM, Plasma, NetworkManager link, DNS,
-  stray windows, and NOVAIR launched into the Wayland session; screenshot at the
+  stray windows, and Apex launched into the Wayland session; screenshot at the
   end via the QEMU monitor (port 5556).
 - `build/ci/boot-kernel.sh` — boots the ISO's kernel/initrd with a custom
   `APPEND`; add `systemd.log_level=debug systemd.log_target=console` to capture

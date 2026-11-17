@@ -18,8 +18,8 @@ TCG (no hardware virtualisation) for live boots.
 | Wired IPv4 / route | PASS (`10.0.2.15/24`, via `10.0.2.2`) | same |
 | DNS | PASS (`getent hosts example.com`) | same |
 | KDE Welcome window | PASS — absent | screenshots |
-| NOVAIR process | PASS — survives 45 s, no Wayland disconnect | same |
-| NOVAIR window | **FAIL** — no window in either screenshot | `v12-screen.png`, `v12-late.png` |
+| Apex process | PASS — survives 45 s, no Wayland disconnect | same |
+| Apex window | **FAIL** — no window in either screenshot | `v12-screen.png`, `v12-late.png` |
 | Desktop panel / dock | **UNRESOLVED** — absent in both captures ~4 min apart; build 10's were captured much later, so timing is not excluded | same |
 
 ## Diagnostics — 2026-11-15 (build 12 image, no rebuild)
@@ -27,8 +27,8 @@ TCG (no hardware virtualisation) for live boots.
 | Test | Result | Evidence |
 |---|---|---|
 | Control: ordinary KDE window renders | **PASS** — Konsole window visible | `build/ci/v12-diag4.png` |
-| NOVAIR, Wayland + software GL | Process alive, Qt builds menus, **no window** | `build/ci/v12-diag3.png`, `v12-diag3.log` |
-| NOVAIR, XWayland | **Aborts**: `could not connect to display :0`; xcb plugin needs `libxcb-cursor0` | `build/ci/v12-diag2.log` |
+| Apex, Wayland + software GL | Process alive, Qt builds menus, **no window** | `build/ci/v12-diag3.png`, `v12-diag3.log` |
+| Apex, XWayland | **Aborts**: `could not connect to display :0`; xcb plugin needs `libxcb-cursor0` | `build/ci/v12-diag2.log` |
 | Panel count via D-Bus | **Not available** — Plasma 6.6 has no `PlasmaShell.evaluateScript` | `build/ci/v12-diag3.log` |
 | Applets config during session | **Absent** (`~/.config/plasma-org.kde.plasma.desktop-appletsrc`) | `v12-diag2.log`, `v12-diag4.log` |
 
@@ -40,7 +40,7 @@ TCG (no hardware virtualisation) for live boots.
 | Payload verifier | PASS 21/21 |
 | Networking / DNS | PASS |
 | KDE Welcome window | PASS — absent |
-| NOVAIR | FAIL — exit 255, Wayland connection broke |
+| Apex | FAIL — exit 255, Wayland connection broke |
 
 ## Build 10
 
@@ -50,7 +50,7 @@ TCG (no hardware virtualisation) for live boots.
 | Payload verifier | PASS 19/19 |
 | SDDM + Plasma desktop (panel, dock, calendar) | PASS, `live10-screen.png` |
 | Wired link / DNS | FAIL (`ens3 DOWN`, `DNS_FAIL`) |
-| NOVAIR | FAIL (EGL abort) |
+| Apex | FAIL (EGL abort) |
 
 ## Not run
 

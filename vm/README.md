@@ -61,7 +61,7 @@ These are measured, not hypothetical:
 
 - **No GPU acceleration.** The VM exposes `virtio-vga` without a DRM render
   node, so Plasma and Qt use software rendering.
-- **NOVAIR does not present a window** on such a machine, although the process
+- **Apex does not present a window** on such a machine, although the process
   runs (see `../KNOWN_ISSUES.md`).
 - **The top panel and dock do not appear** on the live desktop; the desktop
   widgets themselves render.

@@ -16,7 +16,7 @@ screenshot.
 
 - [ ] Build 12: confirm the payload verifier passes the new installer checks and
       the live session still boots to Plasma with networking.
-- [ ] Build 12: verify whether NOVAIR's XWayland fallback starts and loads a page
+- [ ] Build 12: verify whether Apex's XWayland fallback starts and loads a page
       without a render node. If it still fails, capture the full Qt log with
       `QT_LOGGING_RULES=qt.qpa.*=true` and reconsider the renderer path.
 

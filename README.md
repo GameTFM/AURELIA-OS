@@ -28,7 +28,7 @@ legacy research track. They are not the base of the current distribution.
 | Packages | APT + Flatpak/Flathub |
 | Bootloader | GRUB 2 (BIOS/UEFI packages, `shim-signed`) |
 | Installer | Calamares 3.3.14 with `unpackfsc` |
-| Browser | NOVAIR 1.0, a PyQt6 interface on Qt WebEngine |
+| Browser | Apex 1.0, a PyQt6 interface on Qt WebEngine |
 | First login | AURELIA Setup, 17 resumable OOBE screens |
 | Kernel | Ubuntu `linux-image-generic` |
 | Tooling | C++, Python, Bash, QML/JavaScript |
@@ -42,7 +42,7 @@ session with wired networking and DNS, and shows no KDE Welcome window. The
 installer configuration is corrected and checked, but no disk installation has
 been run.
 
-Two defects remain open and were measured on 2026-11-15: NOVAIR keeps running
+Two defects remain open and were measured on 2026-11-15: Apex keeps running
 but never maps a window on a machine without a DRM render node, and the top
 panel and dock do not appear. A control launch of Konsole in the same VM renders
 normally, so neither is a screenshot artifact. The release below still points at
@@ -95,6 +95,25 @@ DISK_GB=24 ./vm/run-vm.sh
 
 See [`vm/README.md`](vm/README.md) for requirements and the limitations that
 apply inside a VM (software rendering, the two open defects above).
+
+## Apex browser package
+
+Apex ships inside the ISO, and can also be built as a normal Debian package for
+Ubuntu 26.04:
+
+```bash
+bash packaging/apex/build-deb.sh
+sudo apt install ./build/ci/artifact/apex_1.0.0_amd64.deb
+```
+
+It is a real Qt WebEngine application, not a Brave build: `brave-core` is a full
+Chromium fork that this environment cannot compile, so Brave informs the product
+model (blocking and privacy defaults) rather than the code. See
+[`packaging/apex/README.md`](packaging/apex/README.md).
+
+> Apex currently starts without presenting a window on machines with no DRM
+> render node. Do not treat the package as a finished browser yet; see
+> `KNOWN_ISSUES.md`.
 
 ## Windows installer (Legacy Alpha)
 
@@ -153,13 +172,13 @@ python3 scripts/validate.py
   They show real notes/media and empty states, never fake data.
 - **Weather / system monitor** — stock KDE Weather and System Monitor widgets
   on the right side. Weather stays empty until a location is configured.
-- **NOVAIR** — an original tabbed browser with a new-tab page, search,
+- **Apex** — an original tabbed browser with a new-tab page, search,
   bookmarks, history, downloads, private windows, settings, real permission
   prompts and a tracker deny-list, built on Qt WebEngine.
 - **First login** — installed systems open the 17-screen AURELIA OOBE;
   the live ISO skips it and uses Calamares instead.
 - **Windows migration** — scan a mounted Windows install or a supported backup,
-  choose files, review app compatibility, import NOVAIR bookmarks/history, and
+  choose files, review app compatibility, import Apex bookmarks/history, and
   optionally store an exported password CSV in an encrypted vault. The source
   is mounted read-only and Windows executables are never treated as installed.
 - **Backup & Restore** — restic-backed encrypted incremental snapshots to local,

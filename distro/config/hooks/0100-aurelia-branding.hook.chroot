@@ -29,7 +29,7 @@ chmod 0755 /usr/libexec/aurelia/aurelia-flatpak-setup
 chmod 0755 /usr/libexec/aurelia/aurelia-first-login
 chmod 0755 /usr/libexec/aurelia/aurelia-installer
 chmod 0755 /usr/libexec/aurelia/aurelia-setup-first-run
-chmod 0755 /usr/bin/novair /usr/share/novair/novair.py
+chmod 0755 /usr/bin/apex /usr/share/apex/apex.py
 
 # Calamares resolves `branding: aurelia` under /usr/share/calamares/branding,
 # while the profile is authored in /etc/calamares/branding. Without this mirror

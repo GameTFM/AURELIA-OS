@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""NOVAIR — the AURELIA OS browser.
+"""Apex — the AURELIA OS browser.
 
-NOVAIR is an original browser shell built on Qt WebEngine. The web renderer,
+Apex is an original browser shell built on Qt WebEngine. The web renderer,
 network stack and JavaScript engine are Qt's; the tabs, navigation, new-tab
 page, bookmarks, history, download manager, private profile, settings and
-permission handling in this file are NOVAIR's own interface.
+permission handling in this file are Apex's own interface.
 """
 from __future__ import annotations
 
@@ -59,9 +59,9 @@ from PyQt6.QtWebEngineCore import (
 )
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 
-APP_NAME = "NOVAIR"
+APP_NAME = "Apex"
 APP_VERSION = "1.0"
-ICON_PATH = "/usr/share/icons/hicolor/512x512/apps/novair.png"
+ICON_PATH = "/usr/share/icons/hicolor/512x512/apps/apex.png"
 TRACKERS = {
     "doubleclick.net",
     "googlesyndication.com",
@@ -91,14 +91,14 @@ DEFAULT_SETTINGS = {
 
 def app_data_dir() -> Path:
     base = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share"))
-    path = base / "novair"
+    path = base / "apex"
     path.mkdir(parents=True, exist_ok=True)
     return path
 
 
 def config_dir() -> Path:
     base = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
-    path = base / "novair"
+    path = base / "apex"
     path.mkdir(parents=True, exist_ok=True)
     return path
 
@@ -107,7 +107,7 @@ class Store:
     """Small, real SQLite store for browser history and bookmarks."""
 
     def __init__(self) -> None:
-        self.conn = sqlite3.connect(app_data_dir() / "novair.db")
+        self.conn = sqlite3.connect(app_data_dir() / "apex.db")
         self.conn.row_factory = sqlite3.Row
         self.conn.executescript(
             """
@@ -240,7 +240,7 @@ def is_address(text: str) -> bool:
 def pretty_url(url: QUrl) -> str:
     if not url.isValid() or url.isEmpty():
         return ""
-    if url.host() == "novair.local":
+    if url.host() == "apex.local":
         return ""
     return url.toString()
 
@@ -305,7 +305,7 @@ def new_tab_html(settings: dict, store: Store) -> str:
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NOVAIR</title>
+<title>Apex</title>
 <style>
 :root {{ color-scheme: {'dark' if dark else 'light'}; }}
 * {{ box-sizing: border-box; }}
@@ -365,7 +365,7 @@ footer {{ margin-top: 40px; text-align: center; color: {palette['muted']};
 </style></head>
 <body class="{'light' if not dark else ''}">
 <main>
-  <div class="logo"><span class="mark"><span>N</span></span><b>NOVAIR</b></div>
+  <div class="logo"><span class="mark"><span>N</span></span><b>Apex</b></div>
   <div class="clock"><strong id="clock">--:--</strong><span id="date"></span></div>
   <form class="search" action="{html.escape(action, quote=True)}" method="get">
     <label for="q">⌕</label>
@@ -377,7 +377,7 @@ footer {{ margin-top: 40px; text-align: center; color: {palette['muted']};
     <section class="card"><h2>Favorites</h2><div class="tiles">{shortcuts}</div></section>
     <section class="card"><h2>Recently visited</h2>{recent}</section>
   </div>
-  <footer>NOVAIR 1.0 · Qt WebEngine · AURELIA OS</footer>
+  <footer>Apex 1.0 · Qt WebEngine · AURELIA OS</footer>
 </main>
 <script>
 function tick() {{
@@ -462,12 +462,12 @@ class SettingsDialog(QDialog):
     def __init__(self, settings: dict, parent=None) -> None:
         super().__init__(parent)
         self.settings = settings
-        self.setWindowTitle("NOVAIR Settings")
+        self.setWindowTitle("Apex Settings")
         self.resize(520, 300)
         form = QFormLayout(self)
         form.setContentsMargins(24, 24, 24, 18)
         form.setSpacing(14)
-        form.addRow(QLabel("<b>NOVAIR preferences</b>"))
+        form.addRow(QLabel("<b>Apex preferences</b>"))
         self.engine = QComboBox()
         self.engine.addItems(SEARCH_ENGINES.keys())
         self.engine.setCurrentText(settings.get("search_engine", "DuckDuckGo"))
@@ -508,7 +508,7 @@ class HistoryDialog(QDialog):
         super().__init__(parent)
         self.store = store
         self.open_url = open_url
-        self.setWindowTitle("NOVAIR History")
+        self.setWindowTitle("Apex History")
         self.resize(760, 500)
         layout = QVBoxLayout(self)
         self.filter = QLineEdit()
@@ -550,7 +550,7 @@ class HistoryDialog(QDialog):
         if QMessageBox.question(
             self,
             "Clear history",
-            "Remove all NOVAIR browsing history?",
+            "Remove all Apex browsing history?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         ) == QMessageBox.StandardButton.Yes:
             self.store.clear_history()
@@ -562,7 +562,7 @@ class BookmarksDialog(QDialog):
         super().__init__(parent)
         self.store = store
         self.open_url = open_url
-        self.setWindowTitle("NOVAIR Bookmarks")
+        self.setWindowTitle("Apex Bookmarks")
         self.resize(760, 480)
         layout = QVBoxLayout(self)
         self.list = QListWidget()
@@ -602,7 +602,7 @@ class BookmarksDialog(QDialog):
 class DownloadsDialog(QDialog):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("NOVAIR Downloads")
+        self.setWindowTitle("Apex Downloads")
         self.resize(700, 420)
         self._rows: dict[int, tuple[QWidget, QProgressBar, QLabel]] = {}
         self._downloads: list[QWebEngineDownloadRequest] = []
@@ -757,11 +757,11 @@ class BrowserTab(QWebEngineView):
         self._new_tab = True
         self.setHtml(
             new_tab_html(self.window_ref.settings, self.window_ref.store),
-            QUrl("https://novair.local/"),
+            QUrl("https://apex.local/"),
         )
 
     def _url_changed(self, url: QUrl) -> None:
-        if url.host() != "novair.local":
+        if url.host() != "apex.local":
             self._new_tab = False
         self.window_ref.tab_url_changed(self, url)
 
@@ -779,7 +779,7 @@ class BrowserTab(QWebEngineView):
         self.window_ref.tab_loaded(self, ok)
 
     def is_new_tab(self) -> bool:
-        return self._new_tab or self.url().host() == "novair.local"
+        return self._new_tab or self.url().host() == "apex.local"
 
     def _context_menu(self, position) -> None:
         menu = QMenu(self)
@@ -830,7 +830,7 @@ class MainWindow(QMainWindow):
         self._download_profiles: set[int] = set()
         self._was_maximized = False
         self.private_windows: list["MainWindow"] = []
-        self.setWindowTitle("NOVAIR" + (" Private" if private else ""))
+        self.setWindowTitle("Apex" + (" Private" if private else ""))
         self.resize(1280, 820)
         if Path(ICON_PATH).is_file():
             self.setWindowIcon(QIcon(ICON_PATH))
@@ -842,7 +842,7 @@ class MainWindow(QMainWindow):
         self._build_menu()
         self._build_tabs()
         self.setStatusBar(QStatusBar(self))
-        self.statusBar().showMessage("NOVAIR ready")
+        self.statusBar().showMessage("Apex ready")
         self.tabs.currentChanged.connect(self._current_changed)
         self.addAction(self.new_tab_action)
         self.addAction(self.close_tab_action)
@@ -925,14 +925,14 @@ class MainWindow(QMainWindow):
         self.zoom_reset_action = self._make_action(
             "Reset zoom", "Ctrl+0", lambda: self._zoom(None)
         )
-        self.quit_action = self._make_action("Quit NOVAIR", "Ctrl+Q", QApplication.quit)
+        self.quit_action = self._make_action("Quit Apex", "Ctrl+Q", QApplication.quit)
         self.bookmarks_manager_action = self._make_action(
             "Manage bookmarks", None, self.show_bookmarks
         )
         self.clear_history_action = self._make_action(
             "Clear all history", None, self.clear_history
         )
-        self.about_action = self._make_action("About NOVAIR", None, self.show_about)
+        self.about_action = self._make_action("About Apex", None, self.show_about)
 
     def _build_toolbar(self) -> None:
         self.toolbar = QToolBar("Navigation", self)
@@ -943,14 +943,14 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.forward_action)
         self.toolbar.addAction(self.reload_action)
         self.toolbar.addAction(self.home_action)
-        self.wordmark = QLabel("NOVAIR")
+        self.wordmark = QLabel("Apex")
         self.wordmark.setObjectName("wordmark")
-        self.wordmark.setToolTip("NOVAIR new tab")
+        self.wordmark.setToolTip("Apex new tab")
         self.wordmark.setCursor(Qt.CursorShape.PointingHandCursor)
         self.wordmark.mousePressEvent = lambda _event: self.new_tab()
         self.toolbar.addWidget(self.wordmark)
         self.address = QLineEdit()
-        self.address.setPlaceholderText("Search with NOVAIR or enter an address")
+        self.address.setPlaceholderText("Search with Apex or enter an address")
         self.address.setClearButtonEnabled(True)
         self.address.setMinimumWidth(320)
         self.address.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -964,7 +964,7 @@ class MainWindow(QMainWindow):
         self.toolbar.addWidget(self.star_button)
         self.menu_button = QToolButton()
         self.menu_button.setText("⋮")
-        self.menu_button.setToolTip("NOVAIR menu")
+        self.menu_button.setToolTip("Apex menu")
         menu = QMenu(self.menu_button)
         menu.addAction(self.new_tab_action)
         menu.addAction(self.new_private_action)
@@ -1041,7 +1041,7 @@ class MainWindow(QMainWindow):
             private = self.private
         tab = BrowserTab(self, private)
         index = self.tabs.addTab(tab, "New Tab")
-        self.tabs.setTabToolTip(index, "NOVAIR")
+        self.tabs.setTabToolTip(index, "Apex")
         if select:
             self.tabs.setCurrentIndex(index)
         if url:
@@ -1070,7 +1070,7 @@ class MainWindow(QMainWindow):
         url = tab.url()
         self.address.setText(pretty_url(url))
         self.setWindowTitle(
-            ("NOVAIR Private" if self.private else "NOVAIR")
+            ("Apex Private" if self.private else "Apex")
             + (f" — {tab.title()}" if tab.title() else "")
         )
         self._update_star(tab)
@@ -1101,7 +1101,7 @@ class MainWindow(QMainWindow):
         self.address.setText(pretty_url(url))
         self.address.setCursorPosition(0)
         self._update_star(tab)
-        if url.host() != "novair.local":
+        if url.host() != "apex.local":
             self.progress.show()
 
     def tab_title_changed(self, tab: BrowserTab, title: str) -> None:
@@ -1111,7 +1111,7 @@ class MainWindow(QMainWindow):
             self.tabs.setTabToolTip(index, title or "New Tab")
         if tab is self.current_tab():
             self.setWindowTitle(
-                ("NOVAIR Private" if self.private else "NOVAIR")
+                ("Apex Private" if self.private else "Apex")
                 + (f" — {title}" if title else "")
             )
 
@@ -1131,7 +1131,7 @@ class MainWindow(QMainWindow):
     def tab_loaded(self, tab: BrowserTab, _ok: bool) -> None:
         if not tab.private:
             url = tab.url()
-            if url.scheme() in ("http", "https") and url.host() not in ("", "novair.local"):
+            if url.scheme() in ("http", "https") and url.host() not in ("", "apex.local"):
                 self.store.add_history(url.toString(), tab.title() or url.toString())
         index = self.tabs.indexOf(tab)
         if index >= 0 and tab.is_new_tab():
@@ -1224,7 +1224,7 @@ class MainWindow(QMainWindow):
         if QMessageBox.question(
             self,
             "Clear history",
-            "Remove all NOVAIR browsing history?",
+            "Remove all Apex browsing history?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         ) == QMessageBox.StandardButton.Yes:
             self.store.clear_history()
@@ -1264,7 +1264,7 @@ class MainWindow(QMainWindow):
             if self._private_profile is not None:
                 self._install_tracker_for(self._private_profile)
             self.setStyleSheet(stylesheet(self.settings.get("theme", "midnight")))
-            self.statusBar().showMessage("NOVAIR settings saved", 3000)
+            self.statusBar().showMessage("Apex settings saved", 3000)
 
     def _install_tracker_for(self, profile: QWebEngineProfile) -> None:
         blocker = getattr(self, "_tracker_blocker", None)
@@ -1316,11 +1316,11 @@ class MainWindow(QMainWindow):
     def show_about(self) -> None:
         QMessageBox.about(
             self,
-            "About NOVAIR",
-            "<h2>NOVAIR 1.0</h2>"
+            "About Apex",
+            "<h2>Apex 1.0</h2>"
             "<p>The AURELIA OS browser.</p>"
-            "<p>NOVAIR is an original browser interface built on Qt WebEngine. "
-            "Qt WebEngine supplies the Chromium-derived rendering engine; NOVAIR "
+            "<p>Apex is an original browser interface built on Qt WebEngine. "
+            "Qt WebEngine supplies the Chromium-derived rendering engine; Apex "
             "supplies its tabs, navigation, new-tab page, bookmarks, history, "
             "downloads, private browsing, settings and permission prompts.</p>"
             "<p>Rendering engine: Qt WebEngine. OS: AURELIA.</p>",
@@ -1356,10 +1356,10 @@ def _get_text(parent: QWidget, title: str, label: str) -> tuple[str, bool]:
 
 
 def main(argv: Optional[list[str]] = None) -> int:
-    parser = argparse.ArgumentParser(description="NOVAIR, the AURELIA OS browser")
+    parser = argparse.ArgumentParser(description="Apex, the AURELIA OS browser")
     parser.add_argument("--private", action="store_true", help="open a private window")
     parser.add_argument("--url", help="open this address in a new tab")
-    parser.add_argument("--version", action="store_true", help="print the NOVAIR version")
+    parser.add_argument("--version", action="store_true", help="print the Apex version")
     parser.add_argument("urls", nargs="*", help="addresses to open")
     parser.add_argument(
         "--self-test",
@@ -1368,19 +1368,19 @@ def main(argv: Optional[list[str]] = None) -> int:
     )
     args = parser.parse_args(argv)
     if args.version:
-        print(f"NOVAIR {APP_VERSION}")
+        print(f"Apex {APP_VERSION}")
         return 0
     if args.self_test:
         checks = [
             ("Qt WebEngine bindings import", True),
             ("search URL", search_url(DEFAULT_SETTINGS, "aurelia os").toString().startswith("https://duckduckgo.com/?q=")),
             ("address detection", is_address("example.com") and not is_address("not an address")),
-            ("new-tab HTML", "NOVAIR" in new_tab_html(DEFAULT_SETTINGS, _EmptyStore())),
+            ("new-tab HTML", "Apex" in new_tab_html(DEFAULT_SETTINGS, _EmptyStore())),
             ("safe download names", unique_download_path(Path("/tmp"), "../../file.zip").name == "file.zip"),
         ]
         failed = [label for label, ok in checks if not ok]
         for label, ok in checks:
-            print(f"NOVAIR self-test {label}: {'PASS' if ok else 'FAIL'}")
+            print(f"Apex self-test {label}: {'PASS' if ok else 'FAIL'}")
         return 1 if failed else 0
 
     QApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts, True)

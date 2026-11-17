@@ -10,7 +10,7 @@ set -euo pipefail
 
 SRC=/mnt/c/Users/karth/Downloads/AURELIA-OS/distro
 DST=/opt/aurelia/distro
-LOG=/mnt/c/Users/karth/Downloads/AURELIA-OS/build/wsl-iso-build-12.log
+LOG=/mnt/c/Users/karth/Downloads/AURELIA-OS/build/wsl-iso-build-13.log
 
 # The 9P mount of C: can be briefly unavailable right after the distribution
 # starts, which made the first copy fail before the build began. Wait for it.
@@ -48,7 +48,7 @@ sync_file config/hooks/normal/0990-aurelia-verify.hook.chroot
 sync_file config/includes.chroot/etc/systemd/system/aurelia-recovery.service
 sync_file config/includes.chroot/etc/grub.d/41_aurelia_recovery
 sync_file config/includes.chroot/usr/lib/NetworkManager/conf.d/10-globally-managed-devices.conf
-sync_file config/includes.chroot/usr/bin/novair
+sync_file config/includes.chroot/usr/bin/apex
 sync_file config/package-lists/desktop.list.chroot
 rm -f "$DST/config/includes.chroot/etc/xdg/autostart/org.kde.welcome.desktop"
 sync_file config/includes.chroot/etc/systemd/system/sddm.service.d/10-aurelia.conf
@@ -57,7 +57,19 @@ sync_file config/includes.chroot/etc/calamares/modules/users.conf
 sync_file config/includes.chroot/etc/calamares/modules/bootloader.conf
 sync_file config/includes.chroot/etc/calamares/modules/shellprocess-targetcleanup.conf
 sync_file config/includes.chroot/etc/xdg/plasma-workspace/env/10-aurelia-software-gl.sh
-sync_file config/includes.chroot/usr/share/novair/novair.py
+sync_file config/includes.chroot/usr/share/apex/apex.py
+sync_file config/includes.chroot/usr/share/applications/apex.desktop
+for size in 48x48 256x256 512x512; do
+    sync_file "config/includes.chroot/usr/share/icons/hicolor/$size/apps/apex.png"
+done
+# The browser was renamed from NOVAIR; drop the old payload so the image does
+# not ship two browsers with one executable.
+rm -f "$DST/config/includes.chroot/usr/bin/novair" \
+      "$DST/config/includes.chroot/usr/share/applications/novair.desktop"
+rm -rf "$DST/config/includes.chroot/usr/share/novair"
+for size in 48x48 256x256 512x512; do
+    rm -f "$DST/config/includes.chroot/usr/share/icons/hicolor/$size/apps/novair.png"
+done
 sync_file config/includes.chroot/usr/share/plasma/look-and-feel/org.aurelia.solstice/contents/layouts/org.kde.plasma.desktop-layout.js
 sync_file scripts/build-iso.sh
 # The static validator is executed from the WSL tree inside the build; if it is
@@ -73,12 +85,12 @@ for hook in "$DST"/config/hooks/*.hook.chroot "$DST"/config/hooks/normal/*.hook.
 done
 bash -n "$DST/scripts/build-iso.sh" || { echo "SYNTAX ERROR: build-iso.sh" >&2; exit 1; }
 sh -n "$DST/config/includes.chroot/etc/xdg/plasma-workspace/env/10-aurelia-software-gl.sh" || exit 1
-python3 -m py_compile "$DST/config/includes.chroot/usr/share/novair/novair.py" \
+python3 -m py_compile "$DST/config/includes.chroot/usr/share/apex/apex.py" \
     || { echo "NOVAIR does not compile" >&2; exit 1; }
 
 grep -q 'getty@tty1' "$DST/config/hooks/0100-aurelia-branding.hook.chroot" || exit 1
 grep -q 'systemd-resolved.service' "$DST/config/hooks/0100-aurelia-branding.hook.chroot" || exit 1
-grep -q 'progress_value' "$DST/config/includes.chroot/usr/share/novair/novair.py" || exit 1
+grep -q 'progress_value' "$DST/config/includes.chroot/usr/share/apex/apex.py" || exit 1
 grep -q 'grub_eltorito' "$DST/scripts/build-iso.sh" || exit 1
 grep -q '^Conflicts=$' "$DST/config/includes.chroot/etc/systemd/system/sddm.service.d/10-aurelia.conf" \
     || { echo "SDDM drop-in lost the conflict reset" >&2; exit 1; }
@@ -93,7 +105,7 @@ grep -q 'chmod 0644 /etc/systemd/system/aurelia' "$DST/config/hooks/0960-aurelia
     || { echo "0960 lost the unit permission fix" >&2; exit 1; }
 grep -q '^unmanaged-devices=$' "$DST/config/includes.chroot/usr/lib/NetworkManager/conf.d/10-globally-managed-devices.conf" \
     || { echo "NetworkManager still ignores wired devices" >&2; exit 1; }
-grep -q 'LIBGL_ALWAYS_SOFTWARE' "$DST/config/includes.chroot/usr/bin/novair" \
+grep -q 'LIBGL_ALWAYS_SOFTWARE' "$DST/config/includes.chroot/usr/bin/apex" \
     || { echo "NOVAIR lost its software-GL fallback" >&2; exit 1; }
 grep -q 'usr/share/calamares/branding' "$DST/config/hooks/0100-aurelia-branding.hook.chroot" \
     || { echo "Calamares branding is not mirrored into its search path" >&2; exit 1; }

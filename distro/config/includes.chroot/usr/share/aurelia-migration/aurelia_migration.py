@@ -30,7 +30,7 @@ CATALOG_PATH = APP_ROOT / "app_catalog.json"
 DATA_HOME = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share"))
 CONFIG_HOME = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
 REPORT_PATH = DATA_HOME / "aurelia-migration" / "last-report.json"
-NOVAIR_DB = DATA_HOME / "novair" / "novair.db"
+Apex_DB = DATA_HOME / "apex" / "apex.db"
 
 Progress = Callable[[str, int, int], None]
 
@@ -579,8 +579,8 @@ def firefox_history(profile: Path) -> list[tuple[str, str, float]]:
             pass
 
 
-def import_browser_data(profile: Path, db_path: Path = NOVAIR_DB) -> dict:
-    """Import bookmarks and history into NOVAIR's real SQLite store."""
+def import_browser_data(profile: Path, db_path: Path = Apex_DB) -> dict:
+    """Import bookmarks and history into Apex's real SQLite store."""
     if (profile / "Bookmarks").is_file():
         bookmarks = chrome_bookmarks(profile)
         history: list[tuple[str, str, float]] = []
@@ -887,10 +887,10 @@ def self_test() -> list[str]:
         bookmarks = chrome_bookmarks(chrome)
         if bookmarks != [("https://example.org/aurelia", "AURELIA")]:
             failures.append("Chrome bookmarks were not parsed")
-        db = Path(temporary) / "novair.db"
+        db = Path(temporary) / "apex.db"
         counts = import_browser_data(chrome, db)
         if counts["total_bookmarks"] < 1:
-            failures.append("NOVAIR bookmark import failed")
+            failures.append("Apex bookmark import failed")
         destination = Path(temporary) / "destination"
         result = copy_file_groups(
             [{"key": "Documents", "path": str(user / "Documents"), "size": 10}],

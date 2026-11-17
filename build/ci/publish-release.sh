@@ -42,7 +42,7 @@ to a USB drive with balenaEtcher, Rufus (DD mode) or
     sudo dd if=aurelia-1.0-solstice.iso of=/dev/sdX bs=8M status=progress oflag=direct
 
 The image boots on BIOS and UEFI firmware and contains the live Plasma desktop,
-the AURELIA Setup assistant for installed systems, NOVAIR and the Calamares
+the AURELIA Setup assistant for installed systems, Apex and the Calamares
 installer. The BIOS live desktop is boot-tested; see distro/VERIFICATION.md for
 the remaining UEFI, Calamares and installed-system test gaps.
 TXT
@@ -58,7 +58,7 @@ body = {
     "tag_name": tag,
     "name": name,
     "body": "AURELIA OS 1.0 \"Solstice\" - Ubuntu 26.04 LTS base, KDE Plasma 6.6, "
-            "the AURELIA desktop, the 13-step setup assistant, NOVAIR 1.0 and Calamares.\n\n"
+            "the AURELIA desktop, the 13-step setup assistant, Apex 1.0 and Calamares.\n\n"
             "The ISO is split into parts; join and verify it before writing it to USB.\n\n"
             "```\n" + notes + "```\n",
     "draft": False,

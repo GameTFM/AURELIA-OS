@@ -930,7 +930,7 @@ class SetupWindow(QMainWindow):
         section = QLabel("OPTIONAL APPLICATIONS")
         section.setObjectName("section")
         layout.addWidget(section)
-        hint = QLabel("AURELIA already includes NOVAIR, Files, Settings, Backup & Restore and the desktop applications. Choose extra apps you want installed now; every installation is reported truthfully.")
+        hint = QLabel("AURELIA already includes Apex, Files, Settings, Backup & Restore and the desktop applications. Choose extra apps you want installed now; every installation is reported truthfully.")
         hint.setObjectName("hint")
         hint.setWordWrap(True)
         layout.addWidget(hint)
@@ -979,7 +979,7 @@ class SetupWindow(QMainWindow):
             "Start menu — lower-left launcher for every installed application.",
             "Taskbar — pinned apps, running windows, network, sound and power.",
             "Desktop widgets — clock, calendar, weather, notes and system monitor.",
-            "NOVAIR — the AURELIA browser, with imported bookmarks and history.",
+            "Apex — the AURELIA browser, with imported bookmarks and history.",
             "Files — browse your home, mounted drives and migrated folders.",
             "Settings — appearance, accounts, privacy, network and display.",
             "Backup & Restore — encrypted backups and Windows backup import.",

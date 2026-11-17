@@ -229,7 +229,7 @@ class BackupSelection:
             if getattr(self, key) and path.is_dir():
                 result.append(str(path))
         if self.application_configs:
-            for path in (home / ".config", home / ".local" / "share" / "novair",
+            for path in (home / ".config", home / ".local" / "share" / "apex",
                          home / ".config" / "aurelia-setup.json"):
                 if path.exists():
                     result.append(str(path))

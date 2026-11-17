@@ -1,5 +1,5 @@
 #!/bin/sh
-# NOVAIR launcher. The Python application lives in the system data directory
+# Apex launcher. The Python application lives in the system data directory
 # so distribution packaging and static validation can inspect the real source.
 set -eu
 
@@ -17,7 +17,7 @@ if [ ! -e /dev/dri/renderD128 ]; then
     # XWayland is a valid alternative only when the session actually exported a
     # display, its authority file is readable, and Qt's xcb-cursor dependency is
     # installed. Measured: with any one missing, the xcb plugin aborts with
-    # "could not connect to display" or "xcb-cursor0 ... is needed" and NOVAIR
+    # "could not connect to display" or "xcb-cursor0 ... is needed" and Apex
     # never reaches a window. Without all three, stay on the Wayland platform,
     # which keeps the process and its window construction alive.
     if [ -n "${DISPLAY:-}" ] && [ -n "${XAUTHORITY:-}" ] && [ -r "${XAUTHORITY}" ] \
@@ -26,4 +26,4 @@ if [ ! -e /dev/dri/renderD128 ]; then
     fi
 fi
 
-exec python3 /usr/share/novair/novair.py "$@"
+exec python3 /usr/share/apex/apex.py "$@"
